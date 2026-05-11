@@ -53,7 +53,31 @@ allowed-tools: Read, Write, Edit, Bash, Agent, AskUserQuestion
 - **不向用户汇报项目现状侦察结果**（"我看到这是个 React 项目"、"你的代码里有 xxx 模块"等等都不要说）。现状是你内部决策依据，不是输出。
 - **不拆任务**。这是 `/cadence:run` 的事。
 - **不写伪代码、不定函数名、不写实现细节**。这是 `/cadence:run` 的事。
-- **发现需求漏洞 → 打断**：如果对话中发现 REQUIREMENT.md 里的需求不清晰、有遗漏或自相矛盾，**立即停止追问**，告知用户：
+- **发现需求漏洞 → 就地修，不打断**：如果对话中发现 REQUIREMENT.md 里的需求不清晰、有遗漏或自相矛盾：
+
+  1. 暂停当前追问，用 AskUserQuestion 让用户**精确确认**修复内容：
+     - `question`: "需求层面发现问题：`<问题简述>`。怎么处理？"
+     - `header`: "修复需求"
+     - `options`:
+       - label: "按建议改", description 里**写出**"把 REQUIREMENT 的 `<段落/条目>` 改成 `<新内容>`"
+       - label: "我换种说法", description: "我自己描述怎么改"（用户文字回答后回到第 1 步再确认一轮）
+       - label: "回去 /cadence:spec 重谈", description: "这是大问题，退出 design"
+
+  2. 用户选"按建议改" → 用 Edit 工具**同步更新** `REQUIREMENT.md` 和 `REQUIREMENT.html` 对应段落（两份**必须**同步，不能只改一个；这是 REQUIREMENT 作为单一权威源的硬约束）。然后输出一行：
+
+     > ✏️ 已更新 REQUIREMENT.md / .html 的 `<段落>`。建议 design 结束后回 `/cadence:spec` 复核一遍。
+
+     继续 design 追问。
+
+  3. 用户选"回去 /cadence:spec 重谈" → 按下方"硬打断退出"流程退出。
+
+  **强制硬打断**（不走就地修，直接退出）：
+
+  - 同一次 design 会话累计改了 **≥3 处**需求（信号：这是需求重构而非补漏）
+  - 涉及**目标用户 / 核心价值**的根本冲突（信号：重谈而非消歧）
+  - 用户主动选"回去 /cadence:spec 重谈"
+
+- **硬打断退出**（仅上述情况触发）：
 
   > ❌ 在设计过程中发现需求层面的问题：`<问题描述>`。
   > 设计需要确定的需求作为基础。请回 `/cadence:spec` 调整后再回来。
