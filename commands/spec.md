@@ -104,7 +104,7 @@ spec 进行中，识别到以下情况时**主动询问用户**是否调研：
    - **slug 一旦定下，后续即使需求方向变化也不再改名**
    - Bash 执行：`mkdir -p .cadence/cycle-<slug>/research`
 2. 调起 research-agent。用 Agent 工具：
-   - `subagent_type`: `"research-agent"`
+   - `subagent_type`: `"cadence:research-agent"`
    - `description`: `"调研 <topic>"`
    - `prompt` 结构：
      ```

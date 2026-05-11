@@ -114,7 +114,7 @@ cycle 目录已经在 spec 阶段建好，复用即可：
 
 1. Bash 执行：`mkdir -p .cadence/<cycle-dir>/research`（幂等）
 2. 调起 research-agent。用 Agent 工具：
-   - `subagent_type`: `"research-agent"`
+   - `subagent_type`: `"cadence:research-agent"`
    - `description`: `"调研 <topic>"`
    - `prompt` 结构：
      ```

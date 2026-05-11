@@ -148,7 +148,7 @@ graph TD
 
 用 Agent 工具：
 
-- `subagent_type`: `"plan-reviewer"`
+- `subagent_type`: `"cadence:plan-reviewer"`
 - `description`: `"plan 第 1 轮 review"`
 - `prompt`: 给定 cycle 路径与 PLAN.md 路径，让 reviewer **自行 Read** REQUIREMENT.md / DESIGN.md / PROJECT.md（如有）/ PLAN.md，输出结构化 JSON。**不要把这些文件全文塞进 prompt**。
 
@@ -241,7 +241,7 @@ graph TD
 
 用 Agent 工具：
 
-- `subagent_type`: `"task-executor"`
+- `subagent_type`: `"cadence:task-executor"`
 - `description`: `"执行 <task-id>: <title>"`（fix 模式时改为 `"修复 <task-id>"`）
 - `prompt` 结构：
 
@@ -288,7 +288,7 @@ commit message 用 <task-id>-fix: <一句话描述修复>
 
 用 Agent 工具：
 
-- `subagent_type`: `"code-reviewer"`
+- `subagent_type`: `"cadence:code-reviewer"`
 - `description`: `"审查 <task-id> 改动"`
 - `prompt` 结构：
 
