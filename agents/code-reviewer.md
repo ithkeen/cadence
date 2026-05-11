@@ -1,7 +1,7 @@
 ---
 name: code-reviewer
 description: 审查刚完成的 task-executor 改动。每个 task-executor 完成后由 /cadence:run 主 agent 自动调起。检查正确性、架构一致性、README 同步、无用代码（critical）等。返回 pass 或 needs_fix + issues 列表。
-model: sonnet
+model: opus
 tools: Read, Grep, Glob, Bash
 ---
 

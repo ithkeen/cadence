@@ -1,7 +1,7 @@
 ---
 name: plan-reviewer
 description: 审查 /cadence:run 命令在 plan 阶段拆出的 task 清单，挑毛病、提改进建议。每次调用独立，不需要意识到自己是第几轮 review。
-model: sonnet
+model: opus
 tools: Read, Grep, Glob
 ---
 

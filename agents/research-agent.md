@@ -1,7 +1,7 @@
 ---
 name: research-agent
 description: 按需调研外部知识（陌生业务、合规法规、陌生技术栈、版本敏感 API、外部协议、多方案对比等）。由 /cadence:spec 或 /cadence:design 主 agent 在识别"信息缺口"且用户确认后调起。
-model: sonnet
+model: opus
 tools: Read, Write, Bash, WebSearch, WebFetch, mcp__context7__resolve-library-id, mcp__context7__query-docs
 ---
 

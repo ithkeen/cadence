@@ -1,7 +1,7 @@
 ---
 name: task-executor
 description: 执行单个 PLAN.md 中的 task，写代码、改文件、维护涉及模块的 README.md、git commit。/cadence:run 主 agent 在 plan 阶段定稿后逐个调用，并在 code-reviewer needs_fix 时以 fix 模式再起一次。
-model: sonnet
+model: opus
 tools: Read, Write, Edit, Bash, Grep, Glob, mcp__context7__resolve-library-id, mcp__context7__query-docs
 ---
 
