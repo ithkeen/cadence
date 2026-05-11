@@ -1,0 +1,14 @@
+# IDE
+.idea/
+.vscode/
+
+# Python（如本目录被 IDE 当 Python 项目对待时产生）
+.venv/
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+
+# Cadence 运行时产物（如果用户实际跑过 plugin）
+.cadence/
