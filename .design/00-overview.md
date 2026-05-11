@@ -23,13 +23,15 @@
 | `/cadence:run` | 一站式：自动拆 plan（reviewer 2 轮）+ 调度子 agent 执行 | `PLAN.md` + `RUN-STATE.md` + 代码 |
 | `/cadence:archive` | 更新项目档案 | 重写 `.cadence/PROJECT.md` |
 
-## 1 个辅助命令
+## 2 个辅助命令
 
 | 命令 | 性质 | 产物 |
 |---|---|---|
 | `/cadence:cleanup` | 极简兜底，不交互 | 删 CURRENT 指向的 cycle 目录 + 清空 CURRENT |
+| `/cadence:quick` | 跳过 spec/design 的微型任务通道 | `.cadence/quick/<id>/QUICK.md` + 代码 commit |
 
-放弃当前 cycle 时使用，不在主链路。详见 `.design/07-cleanup.md`。
+- cleanup：放弃当前 cycle 时使用，不在主链路。详见 `.design/07-cleanup.md`。
+- quick：处理"一句话能说清、改 ≤3 文件、不涉及架构"的微型任务（bug 修复 / 小函数 / 改配置）。**与 CURRENT 完全解耦**——cycle 进行中也可以跑 quick，不影响主链路、不动 PROJECT.md。详见 `commands/quick.md`。
 
 ## 项目档案：.cadence/PROJECT.md（导航层）
 - 项目级"活档案"，记录：定位、技术栈、模块地图、代码约定、关键决策、已知坑
