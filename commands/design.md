@@ -36,7 +36,9 @@ allowed-tools: Read, Write, Edit, Bash, Agent, AskUserQuestion
 读取 `.cadence/PROJECT.md`：
 
 - 不存在 → **0-1 模式**：视为空项目，**静默切换**，不向用户汇报"这是空项目"
-- 存在 → Read 完整内容，拿到技术栈、模块地图、约定、关键决策、已知坑
+- 存在 → Read 完整内容，拿到技术栈、模块地图、约定、关键决策、已知坑、**视觉契约（如有）**
+
+> 视觉契约（`## 视觉契约` 段）若已存在于 PROJECT.md，本 cycle 后续若涉及前端 UI，**默认直接沿用，不再询问用户**（详见下方"视觉契约环节"）。
 
 **Step B：读已有 research（如有）**
 
@@ -90,6 +92,13 @@ allowed-tools: Read, Write, Edit, Bash, Agent, AskUserQuestion
   - **开放型澄清问题**（如"用什么数据库"）：把你预判的 2-3 个常见答案做成选项，工具会**自动追加 Other** 让用户自由输入；不要因为"答案不可枚举"就退回到文本问句
   - 一次最多 4 个问题、每题 2-4 个选项，仍受"每轮最多追问 1~2 个问题"约束
   - **严禁理由**：不得以"让对话更自然""问题太开放""只是确认一下"等理由跳过本工具
+- **前端 UI 检测（每次 design 必做一次自判，静默执行）**：根据 REQUIREMENT.md 与已知项目现状，判断本 cycle 是否会**产出或修改前端代码**（`.tsx` / `.jsx` / `.vue` / `.svelte` / `.html` / `.css` / `.scss` 或同类前端文件）。
+
+  - 判为**是** → 进入"视觉契约环节"（见下方独立章节），且 DESIGN.md 落档时必须包含 `## 视觉契约` 段
+  - 判为**否** → 跳过视觉契约相关步骤，DESIGN.md 不写视觉契约段
+  - **判据要明确**：纯后端、纯脚本、纯 CLI、纯数据迁移、纯配置等都是"否"。涉及任何浏览器渲染的页面、组件、模板都是"是"
+  - 不向用户汇报判定结果（静默），仅在判为"是"时进入视觉契约环节，用户自然会感知到
+
 - **0-1 模式 vs 项目档案模式自动识别**，不让用户切换。模式差异：
 
   | | 0-1 模式 | 项目档案模式 |
@@ -194,6 +203,73 @@ cycle 目录已经在 spec 阶段建好，复用即可：
 
 用户拒绝 → 不调，继续追问。
 
+## 视觉契约环节（仅当前端 UI 检测为"是"时执行）
+
+**位置**：内部自检全部通过之后、留口环节之前。
+
+**沿用判定**：
+
+- 启动前置检查时若 PROJECT.md 已存在 `## 视觉契约` 段 → **直接沿用，不问用户**。在最终 DESIGN.md 的 `## 视觉契约` 段只写一行：
+
+  > 沿用 `.cadence/PROJECT.md` 的视觉契约。
+
+  然后**跳过下方 4 个问题**，直接进入留口环节。
+
+- PROJECT.md 不存在 `## 视觉契约` 段（首次前端 cycle） → 走下方"建立契约"流程。
+
+### 建立契约（仅首次）
+
+按顺序调用 4 次 AskUserQuestion，每次一个问题。**严禁合并成一次多问题、严禁用文本问句**。
+
+**问题 1：风格基调**
+- `question`: "本项目前端的整体风格基调是？（一旦定下，后续所有 cycle 都沿用，请慎重）"
+- `header`: "风格基调"
+- `options`:
+  - label: "minimal-refined", description: "极简精致 / 大量留白 / 弱装饰 / 内容为王"
+  - label: "editorial", description: "杂志编辑感 / 大字号标题 / 衬线主导 / 强排版"
+  - label: "brutalist", description: "粗野原始 / 高对比 / 几何块面 / 反精致"
+  - label: "playful-soft", description: "亲和柔和 / 圆角与糖果色 / 适度趣味动效"
+
+**问题 2：明暗主调**
+- `question`: "前端的明暗主调？"
+- `header`: "明暗主调"
+- `options`:
+  - label: "浅色", description: "Light mode 为主"
+  - label: "深色", description: "Dark mode 为主"
+  - label: "跟随系统", description: "支持 light / dark 切换，跟随 OS"
+
+**问题 3：主导色色系**
+- `question`: "主导色（背景与大面积表面色）走哪个色系？"
+- `header`: "主导色"
+- `options`:
+  - label: "冷色系", description: "蓝 / 青 / 蓝灰 等冷色调"
+  - label: "暖色系", description: "米 / 砂 / 棕 / 暖灰 等暖色调"
+  - label: "中性", description: "纯黑白灰 / 极低饱和度"
+
+**问题 4：accent 用途 + 字体倾向**（一次问 2 题，仍受"每轮最多 1-2 题"约束）
+
+第 4a 题：
+- `question`: "accent 强调色保留给哪些元素？（多选）"
+- `header`: "accent 用途"
+- `multiSelect`: true
+- `options`:
+  - label: "主 CTA", description: "主要按钮 / 主操作"
+  - label: "焦点态", description: "focus ring / 选中态 / hover"
+  - label: "关键状态指示", description: "未读 / 警示 / 进行中等"
+
+第 4b 题：
+- `question`: "字体倾向？"
+- `header`: "字体倾向"
+- `options`:
+  - label: "无衬线", description: "sans-serif，现代干净"
+  - label: "衬线", description: "serif，编辑感 / 阅读型"
+  - label: "等宽", description: "monospace，技术感"
+  - label: "显示型", description: "display font 作标题，正文配普通无衬线"
+
+### 收尾
+
+4 题答完后，把答案在内存里组织成一个表，等待落档环节写入 DESIGN.md。
+
 ## 留口环节
 
 内部自检都通过后，**必须调用 AskUserQuestion**（参见硬规则，不得用文本问句代替）。参数：
@@ -253,6 +329,21 @@ cycle 目录已经在 spec 阶段建好，复用即可：
 ## 留到执行时再决定
 - <项目>：<判定时点>
 - ...
+
+## 视觉契约
+<!-- 仅当本 cycle 涉及前端 UI 时存在；否则整段省略 -->
+<!-- 沿用模式：只写一行 "沿用 .cadence/PROJECT.md 的视觉契约。" -->
+<!-- 首次建立模式：按下表填写 -->
+
+| 字段 | 取值 |
+|---|---|
+| 风格基调 | minimal-refined / editorial / brutalist / playful-soft |
+| 明暗主调 | 浅色 / 深色 / 跟随系统 |
+| 主导色色系 | 冷色系 / 暖色系 / 中性 |
+| accent 用途 | 主 CTA / 焦点态 / 关键状态指示（多选） |
+| 字体倾向 | 无衬线 / 衬线 / 等宽 / 显示型 |
+
+> 视觉契约是跨 cycle 沿用的硬约束。task-executor 在前端 task 中遵守本契约的 5 个字段，spacing 具体值、字号具体 px、weight、radius、shadow、motion 等实现细节由 executor 结合 frontend-design skill 决定。
 ```
 
 ### Step 2：写 DESIGN.html（给用户读）

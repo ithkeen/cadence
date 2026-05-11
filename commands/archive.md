@@ -73,8 +73,14 @@ allowed-tools: Read, Write, Edit, Bash
 - **代码约定变化**：本 cycle 是否确立了新的本项目特有约定？
 - **关键决策**：本 cycle 做了哪些「为什么选 X 不选 Y」的决策？
 - **已知限制 / 坑**：本 cycle 暴露的项目级限制或踩过的坑？
+- **视觉契约**（仅前端 cycle）：本 cycle 的 DESIGN.md 是否含 `## 视觉契约` 段？
+  - DESIGN.md 写明"沿用 .cadence/PROJECT.md 的视觉契约" → PROJECT.md 的视觉契约段**保持不动**
+  - DESIGN.md 含完整契约表（5 字段） → 这是首次建立，**整段写入** PROJECT.md 的 `## 视觉契约` 段
+  - DESIGN.md 无 `## 视觉契约` 段（非前端 cycle） → PROJECT.md 的视觉契约段**保持不动**
 
 把这些变化合进现有 PROJECT.md 的对应章节。已存在条目的若被推翻，**更新或删除**而非追加。
+
+> **视觉契约是只增不改**：一旦在 PROJECT.md 立住，后续 cycle 一律沿用，archive 不会因为后续 cycle 而推翻它。用户若想换风格，需要手动改 PROJECT.md，这不是 archive 的职责。
 
 ### Step 3：写 PROJECT.md
 
@@ -117,6 +123,18 @@ graph TD
 
 ## 已知限制 / 坑
 - ...
+
+## 视觉契约
+<!-- 仅前端项目存在；非前端项目省略整段 -->
+<!-- 由首个前端 cycle 的 DESIGN.md 写入；后续 cycle 沿用，archive 不再改动 -->
+
+| 字段 | 取值 |
+|---|---|
+| 风格基调 | <minimal-refined / editorial / brutalist / playful-soft> |
+| 明暗主调 | <浅色 / 深色 / 跟随系统> |
+| 主导色色系 | <冷色系 / 暖色系 / 中性> |
+| accent 用途 | <主 CTA / 焦点态 / 关键状态指示，多选> |
+| 字体倾向 | <无衬线 / 衬线 / 等宽 / 显示型> |
 ```
 
 #### 写作原则
@@ -127,6 +145,7 @@ graph TD
 - **本项目特有**：约定与决策只写本项目独有的，通用编程常识不要写
 - **功能详情下沉**：不写"已实现功能"章节；模块表通过 README 链接让读者按需深入
 - 章节为空时**省略整个章节**（如本项目暂无"已知限制"，删该 H2 而非保留空标题）
+- **视觉契约只增不改**：一旦写入 PROJECT.md，后续 archive 一律保留原值；非前端项目永远不出现这一章节
 
 ### Step 4：清空 CURRENT
 
