@@ -1,5 +1,5 @@
 ---
-description: 自动拆 plan（plan-reviewer 自检 2 轮）并调度子 agent 执行所有 task
+description: 自动生成 PLAN.md 任务清单（plan-reviewer 自检 2 轮）并调度子 agent 逐个执行
 allowed-tools: Read, Write, Bash, Agent
 ---
 

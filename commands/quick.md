@@ -1,5 +1,5 @@
 ---
-description: 跳过 spec/design，对一个小任务一气呵成（plan → 执行 → 审查 → 落档）
+description: 跳过 spec/design，对一个小任务一气呵成（拆任务 → 执行 → 审查 → 落档）
 argument-hint: [一句话描述]
 allowed-tools: Read, Write, Bash, Grep, Glob, Agent, AskUserQuestion
 ---

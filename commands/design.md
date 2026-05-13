@@ -430,7 +430,7 @@ graph TD
 > - `.cadence/<cycle-dir>/DESIGN.md`
 > - `.cadence/<cycle-dir>/DESIGN.html`
 >
-> 下一步：`/cadence:run` 自动拆 plan 并执行。
+> 下一步：`/cadence:run` 自动生成 PLAN.md 并调度执行。
 
 ## 错误兜底
 
