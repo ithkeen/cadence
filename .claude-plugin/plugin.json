@@ -1,5 +1,5 @@
 {
   "name": "cadence",
   "description": "显式调用、中文输出的开发工作流 plugin。spec → design → run → archive 四命令主闭环 + cleanup 辅助命令。",
-  "version": "0.2.0"
+  "version": "0.2.1"
 }
