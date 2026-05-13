@@ -78,6 +78,7 @@ Read `.cadence/<cycle-dir>/RUN-STATE.md`：
 
 ## 技术栈
 - 语言、框架、关键依赖、版本（只列对架构有影响的）
+- **测试框架与运行命令**（如 `jest` + `npm test`、`pytest` + `pytest`、`go test ./...`）；项目尚无测试基础设施则**显式写**「暂无测试基础设施」，不能省略——下一个 cycle 的 design 会以此判断要不要追问
 
 ## 模块地图
 
