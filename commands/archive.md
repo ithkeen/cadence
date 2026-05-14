@@ -126,7 +126,9 @@ graph TD
 
 ### Step 4：清空 CURRENT
 
-Write `.cadence/CURRENT`，内容为空字符串。
+Bash `: > .cadence/CURRENT` 截断文件为空。
+
+> 不要用 Write 写空 content——Claude Code 的 Write 校验器把 `content: ""` 判为参数缺失，会反复失败。
 
 ### Step 5：简报
 
@@ -140,4 +142,4 @@ Write `.cadence/CURRENT`，内容为空字符串。
 
 - Step 1 任一文件读取失败（除 PROJECT.md 不存在为预期）→ 报错退出，不强行 merge
 - Write PROJECT.md 失败 → 报告错误，**不清空 CURRENT**（保留现场）
-- Write CURRENT 失败 → 提醒用户"PROJECT.md 已更新，需手动清空 `.cadence/CURRENT`"
+- 截断 CURRENT 失败 → 提醒用户"PROJECT.md 已更新，需手动清空 `.cadence/CURRENT`"
