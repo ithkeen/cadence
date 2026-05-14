@@ -44,7 +44,7 @@ Read `.cadence/<cycle-dir>/REQUIREMENT.md`：
 
 #### 1.3 加载项目现状（分层加载）
 
-- **Read PROJECT.md**：不存在 → 0-1 模式，**静默切换**，不向用户汇报；存在 → 拿到技术栈、模块地图、约定、关键决策、已知坑、视觉契约（如有）
+- **Read PROJECT.md**：不存在 → 0-1 模式，**静默切换**，不向用户汇报；存在 → 拿到技术栈、模块地图、视觉契约（如有）
 - **读已有 research**：`ls .cadence/<cycle-dir>/research/ 2>/dev/null` 检查 spec 阶段是否已落档调研，有则 Read 全部 `.md` 作为上下文
 - **模块 README 按需读**：不在启动阶段一次性读所有 README，追问中识别到相关模块时再 Read 对应 `<module>/README.md`
 

@@ -39,7 +39,6 @@ tools: Read, Grep, Glob, Bash
 
 ### 2. 架构一致性
 - 改动是否符合 DESIGN.md 的 `context_hint` 章节方案？
-- 是否破坏了 PROJECT.md 的"代码约定"或"关键决策"？
 - 模块边界是否清晰？
 
 ### 3. README 同步
