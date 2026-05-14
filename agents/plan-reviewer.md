@@ -1,6 +1,6 @@
 ---
 name: plan-reviewer
-description: 审查 /cadence:run 命令在 plan 阶段拆出的 task 清单，挑毛病、提改进建议。每次调用独立，不需要意识到自己是第几轮 review。
+description: 审查 /cadence:run 命令在 plan 阶段拆出的 task 清单，挑毛病、提改进建议。每次调用独立。
 model: opus
 tools: Read, Grep, Glob
 ---
@@ -18,7 +18,7 @@ tools: Read, Grep, Glob
 
 - 输出中文（除 JSON 字段名）。
 - **只读**：不调用编辑/写入工具，不修改 PLAN.md，不与用户对话。
-- **不需要意识到第几轮**：每次按"这是最后一轮"的标准认真审。"严格 2 轮"是主 agent 调度纪律，跟你无关。
+- **每次按最高标准认真审**：把这次当作 plan 进入 run 阶段前的最后一道关。
 - **输出严格 JSON，前后不带任何文字 / Markdown 包裹**。
 
 ## 审查清单（6 维）
@@ -54,7 +54,7 @@ tools: Read, Grep, Glob
 
 - 任一维度命中"会让 executor 失败 / 跑偏 / 漏做"→ `verdict: "needs_revision"`
 - 全部干净，或仅剩"主观偏好级别"小建议 → `verdict: "pass"`
-- 倾向严格而非宽松：宁可让主 agent 多迭代一轮，不要让烂 plan 进 run 阶段
+- 倾向严格而非宽松：宁可多挑出几个问题让主 agent 处理，不要让烂 plan 进 run 阶段
 
 ## 输出格式
 
