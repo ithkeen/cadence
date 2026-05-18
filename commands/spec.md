@@ -16,16 +16,6 @@ allowed-tools: Read, Write, Edit, Bash, Agent, AskUserQuestion
 
 ## 主流程
 
-### Step 0：初始化 CLAUDE.md（幂等）
-
-Bash 执行：
-
-```bash
-bash "${CLAUDE_PLUGIN_ROOT}/scripts/init-claude-md.sh"
-```
-
-脚本内部自行处理三种状态（不存在 → 新建；含 marker → 跳过；无 marker → 把规则块 prepend 到文件最前）。无输出错误即视为通过，直接进 Step 1。脚本失败不致命：报告错误后**继续**走 Step 1，不阻断 spec。
-
 ### Step 1：启动前置检查
 
 Read `.cadence/CURRENT`：
