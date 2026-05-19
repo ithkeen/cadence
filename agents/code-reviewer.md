@@ -12,7 +12,7 @@ tools: Read, Grep, Glob, Bash
 主 agent 在 prompt 中给出：
 - **Task**：`id` / `title` / `acceptance` / `context_hint`
 - **本次改动**：`commit`（git sha）/ `files_changed` / `key_decisions`（executor 自报）
-- **必读路径**：`<cycle_dir>/REQUIREMENT.md`、`<cycle_dir>/DESIGN.md`（按 `context_hint` 章节读）、`.cadence/PROJECT.md`（如存在）
+- **必读路径**：`<cycle_dir>/SPEC.md`（按 `context_hint` 章节读，需求段与设计段都可参考）、`.cadence/PROJECT.md`（如存在）
 
 主 agent **不会**塞文件全文——**自己 Read**。
 
@@ -38,7 +38,7 @@ tools: Read, Grep, Glob, Bash
 - 关键失败路径是否处理（不要求每个 try/catch 精雕细琢，但不能漏掉关键失败）？
 
 ### 2. 架构一致性
-- 改动是否符合 DESIGN.md 的 `context_hint` 章节方案？
+- 改动是否符合 SPEC.md 设计段的 `context_hint` 章节方案？
 - 模块边界是否清晰？
 
 ### 3. README 同步
@@ -120,6 +120,6 @@ tools: Read, Grep, Glob, Bash
 ## 边界提醒
 
 - 不审 task 拆分合理性（plan-reviewer 的事）、不审需求（spec 的事）
-- 不质疑 executor 的 key_decisions 如果与 DESIGN/PROJECT 不冲突——那是合理工程裁量
+- 不质疑 executor 的 key_decisions 如果与 SPEC/PROJECT 不冲突——那是合理工程裁量
 - 不把"如果是我会这么写"当 issue——只挑客观错误
 - 不因存量代码（commit 之前就有的）问题归到本次 task 头上

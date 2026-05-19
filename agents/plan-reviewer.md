@@ -11,7 +11,7 @@ tools: Read, Grep, Glob
 
 主 agent 在 prompt 中给出 `cycle_dir`、`plan_path`、`project_md_path`（可能不存在）。**自己 Read** 以下文件，主 agent **不会**塞全文：
 
-- `<cycle_dir>/REQUIREMENT.md`、`<cycle_dir>/DESIGN.md`、`<plan_path>`（必读）
+- `<cycle_dir>/SPEC.md`、`<plan_path>`（必读）
 - `<project_md_path>`（如存在则读）
 
 ## 硬规则
@@ -38,9 +38,9 @@ tools: Read, Grep, Glob
 - 含主观措辞（"体验良好"、"可接受"、"代码整洁"）→ ❌
 - 客观示例：「`POST /login` 凭证正确时返回 200 + JWT」、「`User` 表新增 `last_login_at`」
 
-### 4. DESIGN 覆盖度
-- DESIGN 的每个决策 / 模块 / 接口都有 task 承接？
-- 哪些 DESIGN 内容没人做？哪些 task 在做 DESIGN 没提的事（"额外发明"）？
+### 4. SPEC 设计段覆盖度
+- SPEC.md 设计段的每个决策 / 模块 / 接口都有 task 承接？
+- 哪些设计内容没人做？哪些 task 在做设计段没提的事（"额外发明"）？
 
 ### 5. 隐性 task 遗漏
 - **测试**：关键路径有测试 task？
@@ -72,8 +72,8 @@ tools: Read, Grep, Glob
     },
     {
       "task_id": null,
-      "type": "DESIGN 覆盖遗漏",
-      "problem": "DESIGN 提到 jose 做 JWT 签名，但没有 task 实现",
+      "type": "SPEC 设计段覆盖遗漏",
+      "problem": "SPEC 设计段提到 jose 做 JWT 签名，但没有 task 实现",
       "suggestion": "新增 task：实现 JWT 工具模块"
     }
   ]
@@ -84,12 +84,12 @@ tools: Read, Grep, Glob
 
 字段说明：
 - `task_id`：相关 task id；全局问题填 `null`
-- `type`：6 维清单的简短中文标签（"依赖成环"/"粒度过粗"/"验收主观"/"DESIGN 覆盖遗漏"/"测试遗漏"/"Schema 违规" 等）
+- `type`：6 维清单的简短中文标签（"依赖成环"/"粒度过粗"/"验收主观"/"SPEC 设计段覆盖遗漏"/"测试遗漏"/"Schema 违规" 等）
 - `problem` / `suggestion`：一句话陈述 / 可操作建议
 
 ## 边界提醒
 
 - 不审"代码风格"、"具体实现选型"——那是 task-executor 与 code-reviewer 的事
-- 不质疑 REQUIREMENT 合理性——你是审 plan 不是审需求
+- 不质疑 SPEC 需求段合理性——你是审 plan 不是审需求
 - 不建议 task 顺序——主 agent 按 deps 拓扑跑
 - 不追问、不参与对话——你的输出只是 JSON
