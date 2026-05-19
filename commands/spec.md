@@ -401,96 +401,41 @@ AskUserQuestion：
 - 「需求」段措辞严格（"用户能..."而非"支持..."），不省略边界条件
 - 「设计」段结构化、信息密集、无装饰；**不放图、不要 mermaid**（HTML 里再画）；模块图用文字版（树状或表格）
 
-### B-5.2 写 SPEC.html（给用户读）
+### B-5.2 调起 spec-html-renderer 子 agent
 
-视觉化、扫读高效，需求 + 设计两段：
-- 需求段：Mermaid 用户旅程；卡片式「做什么 vs 不做什么」对比；可视化验收勾选
-- 设计段：Mermaid 架构图；卡片式模块清单（新增 / 修改 / 沿用 三色）；决策清单
+主 agent 不再亲自渲染 HTML，统一交给 `spec-html-renderer` 子 agent，**同步等待**它完成。
 
-HTML 聚焦决策结论，省略澄清过程的中间问答。
+调用：
 
-```html
-<!doctype html>
-<html lang="zh-CN">
-<head>
-<meta charset="utf-8">
-<title><本次 cycle 标题></title>
-<style>
-  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; max-width: 980px; margin: 40px auto; padding: 0 24px; color: #222; line-height: 1.7; }
-  h1 { border-bottom: 2px solid #333; padding-bottom: 8px; }
-  h2 { margin-top: 36px; }
-  .scope-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 24px 0; }
-  .card { padding: 16px 20px; border-radius: 8px; border: 1px solid #ddd; background: #fafafa; }
-  .card.do { background: #f0f9f0; border-color: #4caf50; }
-  .card.dont { background: #fdf0f0; border-color: #f44336; }
-  .acceptance li { list-style: none; padding-left: 24px; position: relative; }
-  .acceptance li::before { content: "☐"; position: absolute; left: 0; }
-  .module-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin: 16px 0; }
-  .card.new { border-color: #4caf50; background: #f0f9f0; }
-  .card.modified { border-color: #ff9800; background: #fff7e6; }
-  .card.kept { border-color: #999; background: #f5f5f5; }
-  .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75em; margin-left: 8px; vertical-align: middle; color: white; }
-  .tag.new { background: #4caf50; } .tag.modified { background: #ff9800; } .tag.kept { background: #999; }
-  .section-divider { border: 0; border-top: 2px dashed #ccc; margin: 48px 0; }
-</style>
-</head>
-<body>
+- `subagent_type`: `"cadence:spec-html-renderer"`
+- `description`: `"渲染 SPEC.html"`
+- `prompt`：
 
-<h1><本次 cycle 标题></h1>
-<p><段落叙述：做什么 / 给谁 / 要达成什么></p>
+  ```
+  [spec_md_path] .cadence/cycle-<slug>/SPEC.md
+  [cycle_dir] .cadence/cycle-<slug>
+  [title] <从 SPEC.md 第一行 # 标题解析；找不到就给 cycle slug>
 
-<h2>需求</h2>
+  请按 spec-html-renderer 系统约定的杂志阅读风渲染 SPEC.html。
+  ```
 
-<h3>用户旅程</h3>
-<pre class="mermaid">
-flowchart LR
-  ...
-</pre>
-
-<h3>范围</h3>
-<div class="scope-grid">
-  <div class="card do"><h4>✅ 做什么</h4><ul>...</ul></div>
-  <div class="card dont"><h4>❌ 不做什么</h4><ul>...</ul></div>
-</div>
-
-<h3>验收标准</h3>
-<ul class="acceptance"><li>...</li></ul>
-
-<hr class="section-divider">
-
-<h2>设计</h2>
-
-<h3>架构图</h3>
-<pre class="mermaid">
-graph TD
-  ...
-</pre>
-
-<h3>模块</h3>
-<div class="module-grid">
-  <div class="card new"><h4><模块名> <span class="tag new">新增</span></h4><p><职责></p></div>
-  <!-- 修改 / 沿用 同理：class 用 modified / kept -->
-</div>
-
-<h3>关键决策</h3>
-<ul><li><strong>选 X 不选 Y</strong>：<原因></li></ul>
-
-<h3>留到执行时</h3>
-<ul><li><项目>：<判定时点></li></ul>
-
-<script type="module">
-  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-  mermaid.initialize({ startOnLoad: true });
-</script>
-</body>
-</html>
-```
+返回处理：
+- 成功 → 进入 B-5.3
+- 失败 → 把子 agent 简报原样转给用户，但**不中断** spec 命令（SPEC.md 已落档，HTML 用户可手动重试）。继续 B-5.3，收尾文案中标注 HTML 未生成
 
 ### B-5.3 收尾
+
+子 agent 返回成功：
 
 > ✅ Cycle `cycle-<slug>` 已落档：
 > - `.cadence/cycle-<slug>/SPEC.md`
 > - `.cadence/cycle-<slug>/SPEC.html`
+
+子 agent 返回失败：
+
+> ✅ Cycle `cycle-<slug>` 已落档：
+> - `.cadence/cycle-<slug>/SPEC.md`
+> - SPEC.html 渲染失败（详见上方子 agent 简报），可后续手动重试
 
 ---
 
