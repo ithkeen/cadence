@@ -414,7 +414,7 @@ AskUserQuestion([
    [topic]       <一句话主题>
    [output_dir]  .cadence/cycle-<slug>/research
 
-   请按 research-agent 系统约定产出 5 段笔记，落到 output_dir 下。
+   请按 research-agent 系统约定产出调研笔记，落到 output_dir 下。
    "
    )
    ```
