@@ -68,7 +68,6 @@ tools: Read, Write, Bash
      - 标题用衬线 `<h4>`，职责段落用正文无衬线
    - **数据模型 / 接口设计 / 关键流程 / 非功能约束**：原样转 `<h3>` + 列表 / 表，无特殊装饰，沿用全局排版
    - **决策清单**：每条用左侧 3px 砖红竖条的引用块包裹，强调"为什么"
-   - **留到执行时**：列表字色弱化为 `#7a6f5e`
 5. **页脚**
    - 一行小字 `#7a6f5e`，等宽字体：`Generated for cycle <cycle-slug> · <YYYY-MM-DD>`
    - `<cycle-slug>` 从 `cycle_dir` 末段提取（如 `cycle-add-login` → `add-login`）；日期用 Bash `date +%Y-%m-%d` 或主 agent 给的标题里推断不到则当天
