@@ -218,9 +218,8 @@ Agent(
        question: "需求层面发现问题：`<问题简述>`。怎么处理？",
        multiSelect: false,
        options: [
-         { label: "按建议改",       description: "把需求段的 `<段落/条目>` 改成 `<新内容>`" },
-         { label: "我换种说法",     description: "我自己描述怎么改" },
-         { label: "回 A 阶段重谈",  description: "这是大问题，需要从需求阶段重来" }
+         { label: "按建议改",   description: "把需求段的 `<段落/条目>` 改成 `<新内容>`" },
+         { label: "我换种说法", description: "我自己描述怎么改" }
        ]
      }
    ])
@@ -233,24 +232,6 @@ Agent(
    继续设计追问。
 
 3. **用户选"我换种说法"：** 用户文字回答后回到第 1 步再确认一轮。
-
-4. **用户选"回 A 阶段重谈"：** 按下方"硬打断退出"。
-
-### 强制硬打断（不走就地修，直接退出）
-
-仅以下三种情况触发：
-
-- 同一次 spec 累计改了 **≥3 处**需求（信号：需求重构而非补漏）
-- 涉及**目标用户 / 核心价值**的根本冲突（信号：重谈而非消歧）
-- 用户主动选"回 A 阶段重谈"
-
-退出方式：
-
-> ❌ 在设计阶段发现需求层面的问题：`<问题描述>`。
-> 设计需要确定的需求作为基础。请清理当前 cycle 后重新 `/cadence:spec`：
-> - `rm -rf .cadence/<cycle-dir>`
-
-退出**不写 SPEC.md，不写 SPEC.html**（cycle 目录仅含 research，供用户参考或清理）。
 
 ## B-3：设计段留口
 
@@ -376,7 +357,7 @@ Agent(
 
 ### 触发节奏
 
-**每轮用户回复后、产出下一轮追问前，执行一次"调研扫描"**——不是只在对话开头做一次。已为话题 A 触发过调研，不代表对新出现的话题 B 可省略。
+**每轮用户回复后、产出下一轮追问前，执行一次"调研扫描"**
 
 扫描步骤：
 
@@ -442,12 +423,10 @@ AskUserQuestion([
      subagent_type="cadence:research-agent",
      description="调研 <topic>",
      prompt="
-   [Topic]       <一句话主题>
-   [cycle_dir]   .cadence/cycle-<slug>
-   [topic_slug]  <kebab-case 标识，决定产物文件名>
-   [上下文]      <从需求/设计草稿/已有 research 摘录的相关片段，仅供理解 why>
+   [topic]       <一句话主题>
+   [output_dir]  .cadence/cycle-<slug>/research
 
-   请按 research-agent 系统约定产出 5 段笔记，落到 <cycle_dir>/research/<topic_slug>.md。
+   请按 research-agent 系统约定产出 5 段笔记，落到 output_dir 下。
    "
    )
    ```
