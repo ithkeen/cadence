@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # 幂等地初始化用户项目的 cadence 基础设施：
-#   1. 项目根 CLAUDE.md   — 注入 cadence 规则块（三态：不存在→建；含 marker→跳过；无 marker→prepend）
-#   2. .cadence/PROJECT.md — 创建空占位（存在则跳过）
+#   项目根 CLAUDE.md — 注入 cadence 规则块（三态：不存在→建；含 marker→跳过；无 marker→prepend）
 #
 # 由 /cadence:init 调用。不接受参数。
 # 工作目录：优先 $CLAUDE_PROJECT_DIR，fallback 到当前 cwd。
@@ -10,8 +9,6 @@ set -euo pipefail
 
 TARGET_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
 CLAUDE_MD="${TARGET_DIR%/}/CLAUDE.md"
-CADENCE_DIR="${TARGET_DIR%/}/.cadence"
-PROJECT_MD="${CADENCE_DIR}/PROJECT.md"
 MARKER_START="<!-- cadence:rules:start -->"
 
 RULES_BLOCK=$(cat <<'EOF'
@@ -51,10 +48,6 @@ RULES_BLOCK=$(cat <<'EOF'
 - 不要移除既有的死代码，除非被要求这样做。
 
 检验标准：每一行被改动的代码都应能直接追溯到用户的请求。
-
-# 项目导航
-
-## 1. 如果想探索此项目的细节，先读取 @.cadence/PROJECT.md 项目档案，它能帮你精确定位。
 <!-- cadence:rules:end -->
 EOF
 )
@@ -73,13 +66,4 @@ else
   mv "$TMPFILE" "$CLAUDE_MD"
   trap - EXIT
   echo "已在 $CLAUDE_MD 最前面追加 cadence 规则块"
-fi
-
-# --- .cadence/PROJECT.md ---
-mkdir -p "$CADENCE_DIR"
-if [ ! -f "$PROJECT_MD" ]; then
-  : > "$PROJECT_MD"
-  echo "已创建空 $PROJECT_MD"
-else
-  echo "$PROJECT_MD 已存在，跳过"
 fi

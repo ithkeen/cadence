@@ -1,6 +1,6 @@
 ---
 name: spec-html-renderer
-description: 把 SPEC.md 渲染成杂志阅读风的 SPEC.html。由 /cadence:spec 主 agent 在 B-5.2 阶段同步调起，主流程会等待其完成。
+description: 把 SPEC.md 渲染成杂志阅读风的 SPEC.html。由 /cadence:spec 主 agent 在 B-4.2 阶段同步调起，主流程会等待其完成。
 model: opus
 tools: Read, Write, Bash
 ---
@@ -17,10 +17,10 @@ tools: Read, Write, Bash
 ## 硬规则
 
 - 中文输出（指返回主 agent 的简报；HTML 内容本身用 SPEC.md 原文，不翻译）。
-- **只读 `spec_md_path`**：不读项目源码、不读 PROJECT.md、不读 cycle 内其他文件。
+- **只读 `spec_md_path`**：不读项目源码、不读 cycle 内其他文件。
 - **只 Write `<cycle_dir>/SPEC.html`**：不动 SPEC.md（哪怕看到笔误），不动 cycle 内任何其他文件。
 - **不与用户对话**：完成后只返回成功/失败简报给主 agent。
-- **风格写死**：不询问偏好、不变更配色、不引入用户主题。SPEC.md 设计段里的"视觉契约"表只影响该表格的展示内容，**不改变 HTML 自身风格**。
+- **风格写死**：不询问偏好、不变更配色、不引入用户主题。
 - Bash 仅用于 `mkdir -p <cycle_dir>`（幂等保险）；不允许联网、不允许跑其他命令。
 
 ## 渲染规范
@@ -69,7 +69,6 @@ tools: Read, Write, Bash
    - **数据模型 / 接口设计 / 关键流程 / 非功能约束**：原样转 `<h3>` + 列表 / 表，无特殊装饰，沿用全局排版
    - **决策清单**：每条用左侧 3px 砖红竖条的引用块包裹，强调"为什么"
    - **留到执行时**：列表字色弱化为 `#7a6f5e`
-   - **视觉契约**（如有该子段）：原表格保留，表头用衬线，单元格用无衬线，表边框 `#d8d2c8`
 5. **页脚**
    - 一行小字 `#7a6f5e`，等宽字体：`Generated for cycle <cycle-slug> · <YYYY-MM-DD>`
    - `<cycle-slug>` 从 `cycle_dir` 末段提取（如 `cycle-add-login` → `add-login`）；日期用 Bash `date +%Y-%m-%d` 或主 agent 给的标题里推断不到则当天
@@ -110,7 +109,7 @@ mermaid 代码块挂在 `<pre class="mermaid">…</pre>` 里。
 解析提示：
 - 找不到 `## 需求` 段 → 该大段省略
 - 找不到 `## 设计` 段 → 该大段省略
-- 子段（如 `## 视觉契约`）缺失 → 对应子区块省略
+- 子段缺失 → 对应子区块省略
 - mermaid 图：仅当能从 SPEC.md 提取出有意义的"步骤"或"模块关系"才生成，否则省略，**不要硬造**
 
 ## 返回主 agent

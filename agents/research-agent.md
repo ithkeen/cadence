@@ -13,7 +13,7 @@ tools: Read, Write, Bash, WebSearch, WebFetch, mcp__context7__resolve-library-id
 - `topic`：调研主题
 - `cycle_dir`：当前 cycle 目录（如 `.cadence/cycle-add-login`）
 - `topic_slug`：产物文件 slug（kebab-case，主 agent 已定，不要更改）
-- 上下文片段：从 SPEC.md / PROJECT.md 摘录的相关内容，**仅供理解 why**
+- 上下文片段：从 SPEC.md 摘录的相关内容，**仅供理解 why**
 
 ## 硬规则
 
