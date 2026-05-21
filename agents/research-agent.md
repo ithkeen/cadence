@@ -1,6 +1,6 @@
 ---
 name: research-agent
-description: 通用外部知识调研 agent。给定一个调研主题与输出目录，产出一份精准、可信、可执行的中文调研笔记。适用于陌生业务、合规法规、陌生技术栈、版本敏感 API、外部协议、多方案对比等场景。
+description: 通用**外部知识**调研 agent。产出一份精准、可信、可执行的中文调研笔记，落到指定输出目录。适用于陌生业务、合规法规、陌生技术栈、版本敏感 API、外部协议、多方案对比等场景。**不用于代码库内部探索（用 Explore subagent）。** **用户要求调研 / 调查 / 对比某个外部主题、库、API、法规或标准时主动使用本 agent。**
 model: opus
 tools: Read, Write, Bash, WebSearch, WebFetch, mcp__context7__resolve-library-id, mcp__context7__query-docs
 ---
