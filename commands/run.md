@@ -132,7 +132,7 @@ git hash-object .cadence/cycle-<slug>/plan.yaml | cut -c1-12
 **Read plan.yaml 全文**，在内存中解析出：
 
 - 顶层：`tech_stack[]` / `global_forbidden[]` / `meta`
-- `steps[]`：每个 step 的 `step_id` / `kind` / `goal` / `depends_on[]` / `spec_refs[]` / `verify[]` / `acceptance` / `forbidden[]`
+- `steps[]`：每个 step 的 `step_id` / `kind` / `goal` / `depends_on[]` / `spec_refs[]` / `verify[]` / `acceptance` / `forbidden[]`，外加 `kind: frontend` step 的 `mode` / `aesthetic_direction` / `reference_urls` / `dev_server`（若有）
 
 **Run-state 处理三态：**
 
@@ -204,14 +204,15 @@ steps:
 
 派发模板（按 `kind` 选 subagent）：
 
+**kind == code：**
+
 ```
 Agent(
-  subagent_type="cadence:code-executor"         # 当 step.kind == "code"
-                或 "cadence:frontend-executor",  # 当 step.kind == "frontend"
+  subagent_type="cadence:code-executor",
   description="Step <step_id>: <goal 前 40 字>",
   prompt="
 step_id: \"<step_id>\"
-kind: <code|frontend>
+kind: code
 goal: <goal>
 depends_on: <depends_on YAML 数组>
 spec_refs:
@@ -233,10 +234,53 @@ global_forbidden:
 )
 ```
 
+**kind == frontend：**
+
+```
+Agent(
+  subagent_type="cadence:frontend-executor",
+  description="Step <step_id>: <goal 前 40 字>",
+  prompt="
+step_id: \"<step_id>\"
+kind: frontend
+goal: <goal>
+mode: <plan.yaml step.mode 原样：greenfield 或 inherit>
+depends_on: <depends_on YAML 数组>
+spec_refs:
+  - ...
+verify:
+  - cmd: ...
+    must_pass: true
+acceptance: |
+  - ...
+forbidden:
+  - ...
+# 仅 mode: greenfield 且 plan.yaml step 中存在时附带；inherit 模式下不要透传
+aesthetic_direction: <原样；空字符串也原样写出>
+reference_urls:
+  - <原样；为空就写 []>
+# 仅当 plan.yaml step 中显式给出 dev_server 时附带；否则整段省略，让 executor 用默认值
+dev_server:
+  start_cmd: ...
+  ready_signal: ...
+  failure_signal: ...
+  url: ...
+  timeout_seconds: ...
+
+# 以下为 plan 全局段，视为本步额外硬约束（plan-agent 已写明：注入责任在调度方）
+tech_stack:
+  - <plan.yaml tech_stack 原样>
+global_forbidden:
+  - <plan.yaml global_forbidden 原样>
+"
+)
+```
+
 **注入要点：**
 
 - step YAML 块：把 plan.yaml 中该 step 的字段原样照搬，不裁剪不改写
 - `tech_stack` / `global_forbidden`：原样从 plan.yaml 顶层复制；plan-agent 文档明确："注入责任在调度方"
+- frontend step 的 `mode` 必透传（executor 把 `mode` 当必填，缺即 failed）；`aesthetic_direction` / `reference_urls` 仅 greenfield 时透传，inherit 模式下不要带；`dev_server` 仅当 plan 显式给出时透传，否则省略让 executor 走默认值
 - 不向 executor 透露 cycle slug / SPEC.md 路径 / 其他 step（executor 只看自己的契约）
 
 ## 4.4 解析返回 + 更新 state
@@ -266,7 +310,47 @@ global_forbidden:
 
 # 阶段 5：收尾
 
-## 5.1 全部 success
+## 5.1 全部 success：先 review 再收尾
+
+### 5.1.1 调 code-reviewer 做 cycle 末整体 review
+
+所有 step success 后、输出收尾文案前，调一次 `code-reviewer` 对本 cycle 整体改动做 advisory review。**review 是 advisory 性质：不论结果如何都不改 cycle 成功结论、不改任何 step status、不阻塞收尾**。
+
+```
+Agent(
+  subagent_type="cadence:code-reviewer",
+  description="cycle-<slug> 全 step 完成后的整体 review",
+  prompt="
+scope: branch
+focus: |
+  对照 .cadence/cycle-<slug>/SPEC.md 检查本 cycle 的实现是否对齐「做什么」与「验证标准」、是否漏项、是否越界（实现了 SPEC 没要求的事）、是否违反 SPEC「## 技术栈」与「## 不做什么」锁定的约定。
+
+  本 cycle 共 <N> 个 step（code: <n_code>，frontend: <n_frontend>），每个 step 一个 commit，commit message 末尾带 `Step: <step_id>` 标记。提交清单：
+  - S01-<slug>: <commit_hash>
+  - S02-<slug>: <commit_hash>
+  ...
+
+  重点聚焦本 cycle 引入的改动；diff 中若包含本 cycle 之外的既有代码，按 reviewer 默认纪律（diff 外的 pre-existing issues 不在范围内）跳过。
+"
+)
+```
+
+**注入要点：**
+
+- `scope` 固定 `branch`（reviewer 会跑 `git diff --merge-base origin/HEAD`，覆盖本 cycle 落地的所有 commits）
+- `focus` 必须把 SPEC.md 路径与提交清单都写出来，让 reviewer 拿到对照标准与 commit 标记
+- 不向 reviewer 透露 plan.yaml / run-state.yaml（reviewer 不读 plan，靠 SPEC + commit 标记定位）
+
+**返回处理：**
+
+把 reviewer 返回的完整 Markdown 报告 Write 到 `.cadence/cycle-<slug>/review.md`（整体覆盖写）。
+
+- 成功（返回以 `# Code Review:` 开头的完整报告） → 解析报告「## 1. 摘要」中的 `N 项 findings（X CRITICAL, Y MAJOR, Z MINOR）` 行，把这三组数字与 review.md 路径带入 5.1.2 收尾文案
+- 报告体内是 `No issues at the required confidence threshold.` → 同样落档 review.md，收尾文案以"无达阈值 finding"表述
+- 返回以 `❌ Review 未成功：` 或 `⚠️ no changes in scope=` 开头 → **不中断收尾**，把这一行原样作为 review 状态写进收尾文案、**不写 review.md**
+- reviewer 子 agent 调用本身报错（subagent 不可用 / 沙箱拒绝） → 同上，收尾文案标注 "review 未跑成：<错误信号>"，不写 review.md
+
+### 5.1.2 收尾输出
 
 按 step_id 字典序输出已完成列表：
 
@@ -280,10 +364,21 @@ global_forbidden:
 - S02-<slug>: <commit>
 ...
 
+Code review（advisory）：
+- 报告：.cadence/cycle-<slug>/review.md
+- 结论：<X CRITICAL, Y MAJOR, Z MINOR> ｜ 或 "无达阈值 finding" ｜ 或 "review 未跑成：<原文一行>"
+
 下一步：
+- 复核 review.md 中的 findings（若有），按需修复
 - 复核 git log 与 SPEC.md「验证标准」
 - 按 SPEC 的验证标准逐条做最终验收
 ```
+
+**review 状态行的三态文案：**
+
+- 有 finding（任一计数 > 0） → `结论：1 CRITICAL, 2 MAJOR, 0 MINOR`（按报告原值填）
+- 无达阈值 finding → `结论：无达阈值 finding（reviewer 已确认）`
+- review 未跑成 → 省略「报告」行，「结论」行写 `结论：review 未跑成：<reviewer 返回原文一行>`
 
 ## 5.2 失败中止
 
@@ -323,6 +418,7 @@ global_forbidden:
 | `plan-agent` 返回 bail | 把 bail 简报原样转给用户，run 命令退出，不写 run-state.yaml |
 | plan.yaml 已存在但内容残缺（缺 `steps:` 段 / 无法 YAML 解析） | 一行报错退出：`❌ plan.yaml 解析失败：<关键信号>。建议在阶段 2 选「重新生成」` |
 | executor 调用本身报错（subagent 不可用 / 沙箱拒绝） | 视为 failed，error 字段写：`executor 调用失败: <错误信号>`；走失败收尾 |
+| `code-reviewer` 调用失败 / 返回错误简报 | **不阻塞收尾**：不写 review.md，把 reviewer 返回原文一行写进收尾文案的 review 状态行 |
 | run-state.yaml 写失败 | 一行报错退出：`❌ 写 run-state.yaml 失败：<原因>` |
 | 用户手动中断（Ctrl+C） | 已完成的 step 已 commit + state 已落档；下次 run 自动从 pending 处继续 |
 
@@ -339,6 +435,7 @@ global_forbidden:
 
 - `.cadence/cycle-<slug>/plan.yaml` — plan-agent 产（run 不动其内容）
 - `.cadence/cycle-<slug>/run-state.yaml` — 本命令独占维护
+- `.cadence/cycle-<slug>/review.md` — code-reviewer 产（仅全 success 收尾路径产出；reviewer 调失败则不产出）
 - git commits — executor 产（每个 success step 一个 commit）
 
 </产物>
@@ -350,6 +447,7 @@ global_forbidden:
 - [ ] 阶段 3 plan_hash 不匹配必 ask user，不擅自重置状态
 - [ ] 阶段 4 严格遵守：所有 depends_on 都 success 才能进 ready；同 wave ≤ 3 并发；任一 failed 立即跳出
 - [ ] 阶段 5 成功 / 失败两条收尾路径都输出完整进度
+- [ ] 全 success 收尾路径：先调 `code-reviewer`（advisory，scope=branch，focus 含 SPEC.md 路径与提交清单），落档 review.md，结论摘要写进收尾文案；reviewer 失败不阻塞收尾
 - [ ] 每个 wave 结束都把 run-state.yaml 整体覆盖写一次（增量持久化）
 - [ ] executor 简报原样转发，不翻译不改写
 - [ ] 不动 executor 工作树残留、不动用户 git 历史

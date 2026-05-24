@@ -86,6 +86,20 @@ Read SPEC.md 全文，从中提取：
 
 判断依据：goal / acceptance 是否涉及 UI 渲染、用户视觉交互、需要 Playwright 类浏览器验证。模糊时按"是否需要起 dev server + 浏览器跑 happy path"判，需要即 `frontend`。
 
+#### frontend step 额外字段（kind: frontend 时必填 / 可选）
+
+`frontend-executor` 的契约要求每个 frontend step 额外说明视觉模式与美学锚点，因此 `kind: frontend` 的 step 必须补：
+
+- **`mode: greenfield | inherit`（必填）**：
+  - `greenfield` —— 新项目 / 新页面 / 与既有页面无明显视觉关联的独立模块。executor 会调用 `frontend-design` skill 按 BOLD 原则放飞
+  - `inherit` —— 在已有页面上改造、新增功能、新增小界面。executor 会读被改文件 + 既有样式入口，对齐既有视觉语言
+  - 判定：goal 是"新建页面 / 新建独立组件 / 从零搭模块"→ greenfield；goal 是"在既有页面上加 X / 改 Y / 替换 Z"→ inherit
+- **`aesthetic_direction`（仅 mode: greenfield 可填，可空）**：12 枚举之一（`brutalist` / `editorial` / `luxury-refined` / `playful` / `retro-futurist` / `industrial` / `soft-pastel` / `art-deco` / `maximalist-chaos` / `brutally-minimal` / `cyberpunk` / `organic-natural`）。优先从 SPEC「## 视觉与交互风格」「美学方向」原文抽取；SPEC 没明确选枚举则**留空**，让 executor 自 declare（**不要凭印象瞎填**）
+- **`reference_urls`（仅 mode: greenfield 可填，可空）**：参考图 / 参考站点 URL 数组。仅当 SPEC 给了具体参考站点 / 链接时填入；无则空数组
+- **`dev_server`（可选）**：start_cmd / ready_signal / failure_signal / url / timeout_seconds。仅当 SPEC 明确指出非默认 dev server 配置时填；否则省略，executor 用默认值（`npm run dev` / `localhost:3000` 等）
+
+`mode: inherit` 的 step **不要**写 `aesthetic_direction` / `reference_urls`（写了 executor 也忽略，徒增噪音）。
+
 #### 依赖表达
 
 - `depends_on: [<step_id>, ...]` — 显式列**真依赖**前置 step；没有真依赖填 `[]`。不要用 depends_on 模拟顺序——只有"B 真的需要 A 的产物 / 接口 / 文件"才填。
@@ -110,6 +124,16 @@ Read SPEC.md 全文，从中提取：
     - <如 "POST /users 收到非法 email 返回 400 + ValidationError"，禁止 "良好/流畅/完成">
   forbidden:                          # 本步硬约束；可为空数组但字段不能缺
     - <如 "不引入新依赖"、"不修改 src/schemas/base.ts">
+  # 仅 kind: frontend 时追加以下字段
+  mode: greenfield | inherit          # frontend step 必填
+  aesthetic_direction: <枚举 或 留空>  # 仅 greenfield；12 枚举之一或空字符串
+  reference_urls: []                   # 仅 greenfield；URL 数组，可空
+  dev_server:                          # 可选；省略则 executor 用默认值
+    start_cmd: "<如 npm run dev>"
+    ready_signal: "<如 Local:|Ready in>"
+    failure_signal: "<如 Error|EADDRINUSE>"
+    url: "<如 http://localhost:3000>"
+    timeout_seconds: 60
 ```
 
 **字段强约束（生成时即检）：**
@@ -121,6 +145,10 @@ Read SPEC.md 全文，从中提取：
 - `verify` 必须至少有一条 `must_pass: true` 的可执行命令——不允许全 `acceptance` 文字描述
 - `verify.cmd` 必须是**可机器执行**的 shell 命令：含具体路径 / 测试名 / 工具名（如 `pytest tests/x.py::test_y`、`tsc --noEmit`、`npm test -- foo.spec.ts`）。**禁止 "tests pass" / "all good" 这类伪命令**
 - `acceptance` 必须是**可核对的行为陈述**（输入 → 期望输出 / 可观察副作用），禁止 "流畅 / 良好 / 完成 / 友好" 等无判据表述
+- `kind: frontend` 时 `mode` 字段必填，取值必须是 `greenfield` 或 `inherit` 之一
+- `kind: frontend` + `mode: greenfield` 时 `aesthetic_direction` 必须是 12 枚举之一或空字符串（不接受任何枚举外的自由文本）
+- `kind: frontend` + `mode: inherit` 时**禁止**出 `aesthetic_direction` / `reference_urls` 字段
+- `kind: code` 时**禁止**出 `mode` / `aesthetic_direction` / `reference_urls` / `dev_server` 字段
 
 #### 全局段：技术栈 + 全局 forbidden
 
@@ -139,9 +167,10 @@ Read SPEC.md 全文，从中提取：
 | **重复检查** | 有没有两个 step 在做同一件事？切片维度是否一致（都按功能切，不混层）？ |
 | **依赖闭合** | 每个 `depends_on` 中的 step_id 都真实存在？有没有循环依赖？有没有该写没写的隐性依赖（B 用了 A 的产物却没 depends_on: [A]）？ |
 | **kind 正确性** | 每个 step 的 `kind` 是否与 goal/acceptance 性质匹配（需要浏览器自验的标 `frontend`，否则 `code`）？ |
+| **frontend 字段** | `kind: frontend` 的 step 是否齐 `mode` 字段？`mode: greenfield` 时 `aesthetic_direction` 是否在 12 枚举内或留空？`mode: inherit` 是否未带 `aesthetic_direction` / `reference_urls`？`kind: code` 的 step 是否未带 frontend 专属字段？ |
 | **verify 可执行性** | 每条 `verify.cmd` 是否含具体路径 / 测试名 / 工具名，能直接复制粘贴到 shell 跑？有没有 "tests pass" / "all good" 这类伪命令？是否至少 1 条 `must_pass: true`？ |
 | **acceptance 可核对性** | 每条 `acceptance` 是否描述了可观察的输入 → 输出 / 副作用？有没有 "流畅 / 良好 / 完成 / 友好" 这类无判据词？ |
-| **字段完备** | 每个 step 是否齐 `step_id` / `kind` / `goal` / `depends_on` / `spec_refs` / `verify` / `acceptance` / `forbidden` 八个字段？`forbidden` 缺字段（即使是空数组）也算不通过 |
+| **字段完备** | 每个 step 是否齐 `step_id` / `kind` / `goal` / `depends_on` / `spec_refs` / `verify` / `acceptance` / `forbidden` 八个字段？`forbidden` 缺字段（即使是空数组）也算不通过。frontend step 额外检 `mode` 必填 |
 | **全局段** | `tech_stack` 是否摘自 SPEC「## 技术栈」原文？`global_forbidden` 是否覆盖了 SPEC「不做什么」+ 决策清单约束性条款？ |
 | **过度防御** | 有没有 step 在做 SPEC 没要求的额外检查 / 额外测试 / 额外约束？多出来的就是 orphan，删 |
 
@@ -200,7 +229,24 @@ steps:
       - "<本步硬约束>"
 
   - step_id: "S02-<slug>"
-    # ... 其余 step
+    kind: frontend
+    goal: <一句话 UI 目标>
+    depends_on: []
+    spec_refs:
+      - "do:<片段>"
+      - "design:视觉与交互风格:<片段>"
+    verify:
+      - cmd: <可执行 shell 命令>
+        must_pass: true
+    acceptance: |
+      - <可观察 / 可核对的行为陈述（含 UI happy path）>
+    forbidden: []
+    mode: greenfield                   # 或 inherit
+    aesthetic_direction: "editorial"   # 12 枚举之一；mode=inherit 时省略
+    reference_urls: []                  # mode=inherit 时省略
+    # dev_server 可选，省略则 executor 用默认值
+
+  # ... 其余 step
 ```
 
 ## Bail 协议
