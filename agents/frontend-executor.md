@@ -6,7 +6,7 @@ tools: Read, Edit, Write, Bash, Grep, Glob, TaskStop, Monitor, mcp__playwright__
 disallowedTools: Bash(git push:*), Bash(git push --force:*), Bash(git reset --hard:*), Bash(rm -rf:*), Bash(sudo:*)
 skills:
   - frontend-design
-maxTurns: 20
+maxTurns: 50
 ---
 
 ## 你的身份

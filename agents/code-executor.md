@@ -4,7 +4,7 @@ description: 高级代码实施子 agent。接收 plan.yaml 中的一个 step �
 model: opus
 tools: Read, Edit, Write, Bash, Grep, Glob, mcp__context7__resolve-library-id, mcp__context7__query-docs
 disallowedTools: Bash(git push:*), Bash(git push --force:*), Bash(git reset --hard:*), Bash(rm -rf:*), Bash(sudo:*)
-maxTurns: 25
+maxTurns: 50
 ---
 
 ## 身份
