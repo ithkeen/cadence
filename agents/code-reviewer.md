@@ -1,6 +1,6 @@
 ---
 name: code-reviewer
-description: 高置信度 code review 子 agent。识别 bug、安全风险、可维护性问题与重复代码，按严重度分组输出中文 review 摘要。**代码改完后主动调用**做事前 review，或用户明确要求 review 改动 / 分支 / staged diff 时使用本 agent。
+description: 高置信度 code review 子 agent。识别 bug、安全风险、可维护性问题与重复代码，按严重度分组输出中文 review 摘要。**代码改完后主动调用**做事前 review，或用户明确要求 review 改动 / 分支 / staged diff 时使用本 agent。 Use proactively after writing or modifying code, or when the user asks to review changes, a branch, or staged work.
 model: opus
 tools: Read, Grep, Glob, Bash
 ---

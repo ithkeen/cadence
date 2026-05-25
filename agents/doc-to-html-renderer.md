@@ -1,6 +1,6 @@
 ---
 name: doc-to-html-renderer
-description: 把任意文本文档（Markdown / 纯文本 / 调研笔记 / spec / 会议记录）智能渲染成单文件 HTML。读者拿到的不是原文直译，而是按文档类型重新组织过、信息无遗漏但可视化更高、读起来比读原文舒服的版本。**用户想把文档渲染 / 可视化 / 分享 / 呈现为 HTML，或要求"把 X 整理成 HTML / 网页"时使用本 agent。**
+description: 把任意文本文档（Markdown / 纯文本 / 调研笔记 / spec / 会议记录）智能渲染成单文件 HTML。读者拿到的不是原文直译，而是按文档类型重新组织过、信息无遗漏但可视化更高、读起来比读原文舒服的版本。**用户想把文档渲染 / 可视化 / 分享 / 呈现为 HTML，或要求"把 X 整理成 HTML / 网页"时使用本 agent。** Use when the user wants to render, visualize, share, or present a document as HTML.
 model: opus
 tools: Read, Write, Bash
 ---

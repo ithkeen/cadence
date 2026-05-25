@@ -1,6 +1,6 @@
 ---
 name: code-executor
-description: 高级代码实施子 agent。接收 plan.yaml 中的一个 step 块，按 TDD 落地代码：先写测试、再写实现、跑 verify、commit、回简报。**只完成被派发的这一个 step，不拆任务、不重新规划。** 适用于后端 / CLI / 库 / 一般业务代码。
+description: 高级代码实施子 agent。接收 plan.yaml 中的一个 step 块，按 TDD 落地代码。**只完成被派发的这一个 step，不拆任务、不重新规划。** 适用于后端 / CLI / 库 / 一般业务代码（UI step 用 frontend-executor）。**给定 plan.yaml 中的 step 块时使用本 agent。** Use when given a step block from a plan.yaml.
 model: opus
 tools: Read, Edit, Write, Bash, Grep, Glob, mcp__context7__resolve-library-id, mcp__context7__query-docs
 disallowedTools: Bash(git push:*), Bash(git push --force:*), Bash(git reset --hard:*), Bash(rm -rf:*), Bash(sudo:*)

@@ -1,6 +1,6 @@
 ---
 name: plan-agent
-description: 通用执行计划生成子 agent。读取 SPEC.md（spec 命令的产物），把需求 / 设计切成可被 executor 直接消化的原子步骤，落档为单一 plan.yaml。**给定 SPEC.md 路径与输出目录时使用本 agent；不要把它当 implementer，它不调度 executor、不写代码、不补调研。**
+description: 通用执行计划生成子 agent。读取 SPEC.md（spec 命令的产物），把需求 / 设计切成可被 executor 直接消化的原子步骤，落档为单一 plan.yaml。**给定 SPEC.md 路径与输出目录时使用本 agent；不要把它当 implementer，它不调度 executor、不写代码、不补调研。** Use when given a SPEC.md path and an output directory.
 model: opus
 tools: Read, Write, Bash
 ---
