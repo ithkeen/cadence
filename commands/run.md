@@ -44,7 +44,7 @@ run 命令是**调度器**，不是 implementer：
 ls -dt .cadence/cycle-*/ 2>/dev/null
 ```
 
-- 0 个 → 一行报错退出：`❌ 未找到任何 cycle 目录。请先跑 /cadence:spec 创建 cycle`
+- 0 个 → 一行报错退出：`❌ 未找到任何 cycle 目录。请先跑 /cadence:requirements 创建 cycle`
 - 1 个 → 直接采纳，无需询问
 - 2-4 个 → AskUserQuestion 让用户选（label 取 slug，description 取 mtime 与 SPEC.md 是否存在）
 - \> 4 个 → 列出全部 cycle（按 mtime 倒序），AskUserQuestion 用前 3 个最近的 + Other 输入框；用户在 Other 里填 slug
@@ -509,7 +509,7 @@ elif fix_errored:
 | 情形 | 处理 |
 |---|---|
 | `$ARGUMENTS` 含非法字符（`/` 之类） | 一行报错退出：`❌ 非法的 cycle slug：<原始参数>` |
-| `.cadence/` 不存在 | 一行报错退出：`❌ 项目未初始化 cadence。请先跑 /cadence:spec` |
+| `.cadence/` 不存在 | 一行报错退出：`❌ 项目未初始化 cadence。请先跑 /cadence:requirements` |
 | plan.yaml 已存在但内容残缺（缺 `steps:` 段 / 无法 YAML 解析） | 一行报错退出：`❌ plan.yaml 解析失败：<关键信号>。建议在阶段 2 选「重新生成」` |
 | executor 调用本身报错（subagent 不可用 / 沙箱拒绝） | 视为 failed，error 字段写：`executor 调用失败: <错误信号>`；走失败收尾 |
 | run-state.yaml 写失败 | 一行报错退出：`❌ 写 run-state.yaml 失败：<原因>` |

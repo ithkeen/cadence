@@ -1,27 +1,27 @@
 ---
-description: 通过对话锁定做什么 / 技术约定 / 验证标准，产出 SPEC.md 与 SPEC.html
+description: 读取 REQUIREMENTS.md，通过对话锁定技术约定，产出 SPEC.md 与 SPEC.html
 allowed-tools: Read, Write, Bash, Agent, AskUserQuestion
+argument-hint: "[cycle-slug]"
 ---
 
 <命令目的>
-本命令只做"规格说明"，唯一目标：把 SPEC.md / SPEC.html 写详细——详细到下游拿着它就能直接做出确切的实施计划，不必回头确认、不必返工。
+本命令只做"技术设计"，唯一目标：在已锁定的需求基础上，把技术约定钉死，产出 SPEC.md / SPEC.html——详细到下游 plan-agent 拿着它就能直接做出确切的实施计划，不必回头确认、不必返工。
 
-三件事必须清楚：
+入口：必须已经存在 `.cadence/cycle-<slug>/REQUIREMENTS.md`（由 `/cadence:requirements` 产出）。
 
-1. **做什么 / 不做什么** — 范围边界、隐性期待都已澄清
-2. **技术约定** — 技术栈、模块边界、接口、关键流程不留模糊
-3. **验证标准** — 完成的判定条件，每条都能落成一个可执行的检查动作
+三件事最终都要落到 SPEC.md：
 
-按顺序分两阶段达成：
+1. **做什么 / 不做什么** — 从 REQUIREMENTS.md 继承（必要时本命令内修订）
+2. **技术约定** — 技术栈、模块边界、接口、关键流程不留模糊（本命令的核心产出）
+3. **验证标准** — 从 REQUIREMENTS.md 继承
 
-1. 阶段 A · 需求 — 锁定「做什么」+「验证标准」
-2. 阶段 B · 设计 — 锁定「技术约定」，并在末尾归档为 SPEC.md + SPEC.html
+落档时机：B-4 一次性把"需求段（来自 REQUIREMENTS.md，含本命令内的修订）+ 设计段"写入 SPEC.md；B-6 删除中间产物 REQUIREMENTS.md。
 </命令目的>
 
 <全局规则>
 
 - **输出语言与边界**：全程中文输出。主 agent 不直接读项目源代码（追问中需要了解现有代码时调起 Explore 子 agent，用法见 B-1），不向用户汇报现状侦察结果（"我看到这是个 React 项目"等不要说）。不拆任务、不写伪代码 / 函数名 / 实现细节（这些属于下游实施）
-- **用户决策点规范**：每轮最多 1~2 个问题，不连珠炮。所有需用户回答的问题必须用 `AskUserQuestion`（决策型把选项写清；开放型预判 2-3 个常见答案做选项，工具自动追加 Other；一次最多 4 题、每题 2-4 选项）。A-1 开场问句是一处例外，用纯文本
+- **用户决策点规范**：每轮最多 1~2 个问题，不连珠炮。所有需用户回答的问题必须用 `AskUserQuestion`（决策型把选项写清；开放型预判 2-3 个常见答案做选项，工具自动追加 Other；一次最多 4 题、每题 2-4 选项）
 - **无快速通过出口**：用户即使说"别问了直接落档"，自检没走完就继续问
 - **选型类决策先摆方案**：识别到技术选型 / 模块拆法 / 算法 / 持久化方式等关键决策点，**先用一次 AskUserQuestion 把 2-3 个备选 + 推荐 + 理由摆出来让用户选**，再就选定方向展开细节追问。禁止把方案对比和细节追问揉进同一次 AskUserQuestion
 - **research 自包含**：所有引用了 research 的决策，关键事实（具体值 / 字段名 / endpoint / 限流参数 / 协议字段等）必须 inline 到 SPEC 设计段对应小节。下游 plan-agent 默认只读 SPEC.md，靠 `research/*.md` 存在兜底不可靠
@@ -30,7 +30,7 @@ allowed-tools: Read, Write, Bash, Agent, AskUserQuestion
 
 <阶段留口模板>
 
-A-3 / B-3 留口环节复用以下模板，文案按 <阶段名> / <继续动作> / <继续描述> 变量化：
+B-3 留口环节复用以下模板，文案按 <阶段名> / <继续动作> / <继续描述> 变量化：
 
 ```
 AskUserQuestion([
@@ -50,74 +50,79 @@ AskUserQuestion([
 
 <主流程>
 
-# 阶段 A：需求
+# 阶段 0：解析参数 + 定位 cycle
 
-## A-1：开场问 + 定 slug
+参数 `$ARGUMENTS` 解析规则：
 
-用纯文本问句开场：
+1. 去掉两侧空白；剥掉可能的 `cycle-` 前缀，得到 `<slug>`
+2. 拼出目标目录：`.cadence/cycle-<slug>/`
 
-> 这次想做什么？
+**有参数：**
 
-等待用户回答。
+- 目录不存在 → 一行报错退出：
 
-**用户回答后立即（不向用户输出可见信息）：**
+  ```
+  ❌ Cycle 目录不存在：.cadence/cycle-<slug>/
+  请先跑 /cadence:requirements <slug> 建立 cycle 并锁定需求。
+  ```
 
-- 根据回答总结简短英文 kebab-case slug（如 `add-login`、`mvp-blog-site`），不让用户确认、不让用户改
-- 执行 `mkdir -p .cadence/cycle-<slug>`，已存在直接覆盖里面文件
-- slug 一旦定下不再改名
+- 目录存在但缺 `REQUIREMENTS.md` → 一行报错退出：
 
-之后进入 A-2。
+  ```
+  ❌ REQUIREMENTS.md 未找到：.cadence/cycle-<slug>/REQUIREMENTS.md
+  请先跑 /cadence:requirements <slug> 锁定需求。
+  ```
 
-## A-2：需求追问循环
+- 目录存在 + 已有 `SPEC.md` → AskUserQuestion：
 
-每轮顺序执行：
+  ```
+  AskUserQuestion([
+    {
+      header: "已有 SPEC",
+      question: "Cycle `<slug>` 已存在 SPEC.md，怎么处理？",
+      multiSelect: false,
+      options: [
+        { label: "重新设计覆盖", description: "丢弃已有 SPEC.md/SPEC.html，从 B-1 重新设计" },
+        { label: "退出",         description: "不动现有产物，直接结束本命令" }
+      ]
+    }
+  ])
+  ```
 
-1. 调研扫描（见 <调研循环>）
-2. 追问（每轮 1~2 题，AskUserQuestion）
-3. 内部静默自检（不输出过程）
-4. 自检通过 → A-3；否则回 1
+  - 选「重新设计覆盖」→ 进入 B-0
+  - 选「退出」→ 礼貌结束
 
-**追问的 4 个维度（只问这些）：**
+  注意：到了这一步说明 REQUIREMENTS.md 也存在（spec 命令完成时不删 SPEC.md，但会删 REQUIREMENTS.md；如果 SPEC.md 存在却 REQUIREMENTS.md 也在，是用户回退跑了 requirements 后又来跑 spec 的合理路径）。
 
-1. 目标用户 / 使用场景 — 谁用、什么场景
-2. 核心价值 / 要解决的问题 — 为什么做
-3. **范围边界（做什么 + 不做什么）** — 一等公民。对每个"做什么"反问对应的"不做什么"；模糊词必须追问消歧（"登录" → 第三方登录？记住我？忘记密码？验证码？）；主动列举用户没说但通常会期待的功能，逐一确认是否在范围内
-4. **验证标准** — 一等公民。怎样算这个 cycle 完成，每条都要具体到可以直接翻译成一个检查动作（运行某命令、访问某 URL、看到某行为），覆盖范围段每个"做什么"至少一条对应。不接受"功能正常"、"测试通过"这类空话——要么写明"运行 `<command>`，全部用例通过"，要么写明被验证的具体行为
+**无参数：**
 
-技术栈、性能、约束、风险**完全不要问**（归阶段 B）。
+```bash
+ls -dt .cadence/cycle-*/ 2>/dev/null
+```
 
-**内部自检：**
+- 0 个 → 一行报错退出：`❌ 未找到任何 cycle 目录。请先跑 /cadence:requirements 创建 cycle`
+- 1 个 → 直接采纳，按"目录存在"分支处理
+- 2-4 个 → AskUserQuestion 让用户选（label 取 slug，description 取 mtime 与 REQUIREMENTS.md / SPEC.md 是否存在）
+- \> 4 个 → 列出全部 cycle（按 mtime 倒序），AskUserQuestion 用前 3 个最近的 + Other 输入框；用户在 Other 里填 slug
 
-- [范围] 所有"做"都有对应"不做"？模糊词都消歧了？常见隐性期待都问过了？
-- [验证] 每条验证项都能直接翻译成一个检查步骤？覆盖了每个"做什么"？
-- [其他维度] 目标用户 / 核心价值都清楚？
-- 把自己当下游实施者：拿到当前需求段，能不能直接做出实施计划？
-
-任一不通过 → 继续追问。
-
-## A-3：需求段留口
-
-按 <阶段留口模板> 调用，变量取值：
-
-- `<阶段名>` = 需求
-- `<继续动作>` = 进入技术设计
-- `<继续描述>` = 进入阶段 B，紧接着聊技术方案
-
-选"需求还想再聊" → 回 A-2；选"进入技术设计" → 进入阶段 B。
-
-需求段共识在内存中持有，B-4 一次性写完整 SPEC.md。直接进入阶段 B，不向用户输出可见信息。
+确认 cycle 后进入 B-0。
 
 ---
 
 # 阶段 B：设计
 
-## B-0：加载已有 research
+## B-0：加载 REQUIREMENTS.md + 已有 research
 
-```bash
-ls .cadence/cycle-<slug>/research/ 2>/dev/null
-```
+1. **Read `.cadence/cycle-<slug>/REQUIREMENTS.md`** 全文 → 解析出"标题 / 段落叙述 / 做什么 / 不做什么 / 验证标准"，作为内存中的「需求段共识」起点
+2. 加载已有 research：
 
-有则 Read 全部 `.md` 作为上下文；无则直接进入 B-1。
+   ```bash
+   ls .cadence/cycle-<slug>/research/ 2>/dev/null
+   ```
+
+   有则 Read 全部 `.md` 作为上下文；无则跳过
+
+进入 B-1。
 
 ## B-1：设计追问循环
 
@@ -176,7 +181,7 @@ Agent(
 
 任一不通过 → 继续追问。全部通过 → B-3 留口。
 
-## B-2：发现需求漏洞 → 就地修，不回退阶段 A
+## B-2：发现需求漏洞 → 就地修，不回写 REQUIREMENTS.md
 
 设计追问中发现需求段（内存中的共识）不清晰、有遗漏或自相矛盾时：
 
@@ -196,9 +201,9 @@ Agent(
    ])
    ```
 
-2. **用户选"按建议改"：** 更新内存中的需求段共识（此时 SPEC.md 尚未落档，无文件操作）。输出一行：
+2. **用户选"按建议改"：** 仅更新内存中的需求段共识，**REQUIREMENTS.md 文件保持不动**（最终 B-4 写 SPEC.md 时一并落入修订后的需求；B-6 会把 REQUIREMENTS.md 删掉）。输出一行：
 
-   > ✏️ 已更新需求段的 `<段落>`。继续设计追问。
+   > ✏️ 已更新内存中的需求段 `<段落>`，REQUIREMENTS.md 保持原样。继续设计追问。
 
    继续设计追问。
 
@@ -216,7 +221,7 @@ Agent(
 
 ## B-4：落档 SPEC.md
 
-Write `.cadence/cycle-<slug>/SPEC.md`，把内存中的需求段共识与设计段沉淀**一次性整体写入**：
+Write `.cadence/cycle-<slug>/SPEC.md`，把内存中的需求段共识（来自 REQUIREMENTS.md，可能含 B-2 修订）与设计段沉淀**一次性整体写入**：
 
 ```markdown
 # <自然语言标题>
@@ -319,50 +324,61 @@ Agent(
 - 成功 → B-6
 - 失败 → 把子 agent 简报原样转给用户，但**不中断** spec 命令（SPEC.md 已落档，HTML 用户可手动重试）。继续 B-6，收尾文案中标注 HTML 未生成
 
-## B-6：收尾
+## B-6：清理中间产物 REQUIREMENTS.md
 
-**子 agent 返回成功：**
+SPEC.md 已落档，REQUIREMENTS.md 完成使命：
+
+```bash
+rm -f .cadence/cycle-<slug>/REQUIREMENTS.md
+```
+
+- 成功 → 进入 B-7
+- 失败 → 不阻塞流程，记录失败原因，B-7 收尾文案追加一行提示用户手动清理
+
+## B-7：收尾
+
+**B-5 成功 + B-6 成功：**
 
 > ✅ Cycle `cycle-<slug>` 已落档：
 > - `.cadence/cycle-<slug>/SPEC.md`
 > - `.cadence/cycle-<slug>/SPEC.html`
 >
-> 打开 SPEC.html 复核，再把 SPEC.md 交给下游实施。
+> 中间产物 `REQUIREMENTS.md` 已清理。
+>
+> 打开 SPEC.html 复核，再把 SPEC.md 交给下游实施（`/cadence:run <slug>`）。
 
-**子 agent 返回失败：**
+**B-5 失败：**
 
 > ✅ Cycle `cycle-<slug>` 已落档：
 > - `.cadence/cycle-<slug>/SPEC.md`
 > - SPEC.html 渲染失败（详见上方子 agent 简报），可后续手动重试
 >
-> 复核 SPEC.md，再交给下游实施。
+> 中间产物 `REQUIREMENTS.md` 已清理。
+>
+> 复核 SPEC.md，再交给下游实施（`/cadence:run <slug>`）。
+
+**B-6 失败（叠加在上面任一种之上，追加一行）：**
+
+> ⚠️ REQUIREMENTS.md 清理失败：`<失败原因>`，可手动 `rm` 清理。
 
 </主流程>
 
 <调研循环>
 
-## 调研机制（A-2 / B-1 每轮强制调用）
+## 调研机制（B-1 每轮强制调用）
 
 ### 触发节奏
 
 每轮用户回复后、产出下一轮追问前，执行一次"调研扫描"：
 
-1. **列候选**
-   - 需求阶段：从用户最新回复 + 已澄清需求中挑出具名的产品类型 / 业务领域 / 合规标准 / 竞品 / 行业术语
-   - 设计阶段：从用户最新回复 + 设计进行中草稿挑出具名的库 / 框架 / 协议 / 标准 / 第三方服务 / 算法 / 业务领域术语
+1. **列候选** — 从用户最新回复 + 设计进行中草稿挑出具名的库 / 框架 / 协议 / 标准 / 第三方服务 / 算法 / 业务领域术语
 2. **对照已调研** — `ls .cadence/cycle-<slug>/research/ 2>/dev/null`。文件名匹配 → 已覆盖，跳过
 3. **对剩余候选逐个判断**是否命中下方触发条件
 4. **任意一个命中 → 必须 AskUserQuestion**
 
 ### 触发条件
 
-**需求阶段** — 候选话题命中任一即触发：
-
-- 涉及陌生业务领域
-- 涉及合规 / 法规 / 标准（GDPR、PCI-DSS 等）
-- 用户希望参考竞品但没给出具体参考
-
-**设计阶段** — 根本标准：会阻塞下游实施吗。判断方式：如果这个话题现在不调研，下游拿着 SPEC.md 做计划、或按计划写代码时，会因为 SPEC.md 设计段信息缺口而**做不出确切的计划 / 写不出能跑的代码**吗？典型阻塞场景（满足任一即触发）：
+根本标准：会阻塞下游实施吗。判断方式：如果这个话题现在不调研，下游拿着 SPEC.md 做计划、或按计划写代码时，会因为 SPEC.md 设计段信息缺口而**做不出确切的计划 / 写不出能跑的代码**吗？典型阻塞场景（满足任一即触发）：
 
 - **外部服务 / 第三方平台 / SDK / 云服务 / 模型 API** — 接口路径、鉴权方式、请求/响应结构、错误码、限流、模型 ID 命名约定，任一不清楚都让下游卡住
 - **版本敏感的库 / 框架** — 当前版本 breaking change、新 API 形状没把握
@@ -372,7 +388,7 @@ Agent(
 
 凡用户回复或设计草稿中出现**具名的外部 SDK / API / 协议 / 第三方平台 / 云服务 / 模型 ID / 版本敏感框架**，默认触发调研询问，由用户在 AskUserQuestion 里决定是否跳过。
 
-**不触发**（两阶段共通）：常识性补充、用户已说清楚、通用编程模式 / 设计模式、已在 `research/` 中找到。
+**不触发**：常识性补充、用户已说清楚、通用编程模式 / 设计模式、已在 `research/` 中找到。
 
 ### 询问方式
 
@@ -392,7 +408,7 @@ AskUserQuestion([
 
 ### 用户同意调研时
 
-1. **确保 research 子目录存在**（cycle 目录已在 A-1 建好）：`mkdir -p .cadence/cycle-<slug>/research`（幂等）
+1. **确保 research 子目录存在**（cycle 目录已建好）：`mkdir -p .cadence/cycle-<slug>/research`（幂等）
 
 2. 调起 research-agent：
 
@@ -419,16 +435,18 @@ AskUserQuestion([
 <异常处理>
 
 - 用户回答完全不像开发任务（聊天闲聊、技术求助） → 礼貌说明 spec 用途，不强行进入流程
-- 用户中途说"算了不做了" → 不写后续文件，礼貌退出。已建的 cycle 目录不主动清理，用户可手动 `rm -rf .cadence/<cycle-dir>`
+- 用户中途说"算了不做了" → 不写后续文件，礼貌退出。已建的 cycle 目录与 REQUIREMENTS.md 不主动清理
+- `$ARGUMENTS` 含非法字符（`/` 之类） → 一行报错退出：`❌ 非法的 cycle slug：<原始参数>`
 - Bash / Write 失败 → 直接报告错误，不重试
 
 </异常处理>
 
 <产物>
 
-- `.cadence/cycle-<slug>/SPEC.md` — 需求段 + 设计段（B-4 一次性写入）
+- `.cadence/cycle-<slug>/SPEC.md` — 需求段（继承自 REQUIREMENTS.md，含本命令内修订）+ 设计段（B-4 一次性写入）
 - `.cadence/cycle-<slug>/SPEC.html` — 智能渲染的可读 HTML（doc-to-html-renderer 产出），供用户阅读与复核
 - `.cadence/cycle-<slug>/research/*.md` — 按需调研的笔记（如有）
+- ~~`.cadence/cycle-<slug>/REQUIREMENTS.md`~~ — B-6 主动删除（中间产物，使命已尽）
 
 </产物>
 
@@ -436,6 +454,7 @@ AskUserQuestion([
 
 - [ ] `.cadence/cycle-<slug>/SPEC.md` 存在，三件齐全：做什么 / 技术约定 / 验证标准
 - [ ] 已调起 `doc-to-html-renderer`，成功则 `SPEC.html` 存在；失败则收尾文案明确标注
+- [ ] `.cadence/cycle-<slug>/REQUIREMENTS.md` 已被清理（B-6 失败则收尾文案明确标注）
 - [ ] 若产生过调研，`.cadence/cycle-<slug>/research/*.md` 存在，且关键事实已 inline 到 SPEC.md
 
 </成功标准>
