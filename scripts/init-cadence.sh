@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # 幂等地初始化用户项目的 cadence 基础设施：
 #   项目根 CLAUDE.md — 注入 cadence 规则块（三态：不存在→建；含 marker→跳过；无 marker→prepend）
+#   项目根 .gitignore — 确保忽略 .idea/ 与 .cadence/（不存在→建；已含→跳过；不含→追加）
 #
 # 由 /cadence:init 调用。不接受参数。
 # 工作目录：优先 $CLAUDE_PROJECT_DIR，fallback 到当前 cwd。
@@ -9,7 +10,9 @@ set -euo pipefail
 
 TARGET_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
 CLAUDE_MD="${TARGET_DIR%/}/CLAUDE.md"
+GITIGNORE="${TARGET_DIR%/}/.gitignore"
 MARKER_START="<!-- cadence:rules:start -->"
+GITIGNORE_ENTRIES=(".idea/" ".cadence/")
 
 RULES_BLOCK=$(cat <<'EOF'
 <!-- cadence:rules:start -->
@@ -67,3 +70,20 @@ else
   trap - EXIT
   echo "已在 $CLAUDE_MD 最前面追加 cadence 规则块"
 fi
+
+# --- .gitignore ---
+if [ ! -f "$GITIGNORE" ]; then
+  : > "$GITIGNORE"
+  echo "已创建 $GITIGNORE"
+fi
+for entry in "${GITIGNORE_ENTRIES[@]}"; do
+  if grep -Fxq "$entry" "$GITIGNORE" || grep -Fxq "${entry%/}" "$GITIGNORE"; then
+    echo "$GITIGNORE 已含 ${entry}，跳过"
+  else
+    if [ -s "$GITIGNORE" ] && [ -n "$(tail -c1 "$GITIGNORE")" ]; then
+      printf '\n' >> "$GITIGNORE"
+    fi
+    printf '%s\n' "$entry" >> "$GITIGNORE"
+    echo "已在 $GITIGNORE 追加 ${entry}"
+  fi
+done
