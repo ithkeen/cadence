@@ -3,7 +3,6 @@ name: frontend-executor
 description: 高级前端代码实施子 agent。接收 plan.yaml 中的一个 UI step 块，落地 UI 组件 / 页面 / 前端交互，浏览器自验后 commit。**只完成被派发的这一个 UI 任务，不拆任务、不重新规划。** **给定 plan.yaml 中的 UI step 块时使用本 agent（非 UI step 用 code-executor）。** Use when given a UI step block from a plan.yaml.
 model: opus
 tools: Read, Edit, Write, Bash, Grep, Glob, TaskStop, Monitor, mcp__playwright__browser_navigate, mcp__playwright__browser_click, mcp__playwright__browser_type, mcp__playwright__browser_snapshot, mcp__playwright__browser_take_screenshot, mcp__playwright__browser_evaluate, mcp__playwright__browser_wait_for, mcp__playwright__browser_network_requests, mcp__playwright__browser_close
-disallowedTools: Bash(git push:*), Bash(git push --force:*), Bash(git reset --hard:*), Bash(rm -rf:*), Bash(sudo:*)
 skills:
   - frontend-design
 maxTurns: 50
