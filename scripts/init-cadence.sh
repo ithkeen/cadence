@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 幂等地初始化用户项目的 cadence 基础设施：
 #   项目根 CLAUDE.md — 注入 cadence 规则块（三态：不存在→建；含 marker→跳过；无 marker→prepend）
-#   项目根 .gitignore — 确保忽略 .idea/ 与 .cadence/（不存在→建；已含→跳过；不含→追加）
+#   项目根 .gitignore — 确保忽略 .idea/、.cadence/ 与 .playwright-mcp/（不存在→建；已含→跳过；不含→追加）
 #
 # 由 /cadence:init 调用。不接受参数。
 # 工作目录：优先 $CLAUDE_PROJECT_DIR，fallback 到当前 cwd。
@@ -12,7 +12,7 @@ TARGET_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
 CLAUDE_MD="${TARGET_DIR%/}/CLAUDE.md"
 GITIGNORE="${TARGET_DIR%/}/.gitignore"
 MARKER_START="<!-- cadence:rules:start -->"
-GITIGNORE_ENTRIES=(".idea/" ".cadence/")
+GITIGNORE_ENTRIES=(".idea/" ".cadence/" ".playwright-mcp/")
 
 RULES_BLOCK=$(cat <<'EOF'
 <!-- cadence:rules:start -->

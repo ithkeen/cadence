@@ -12,3 +12,4 @@ __pycache__/
 
 # Cadence 运行时产物（如果用户实际跑过 plugin）
 .cadence/
+.playwright-mcp/
