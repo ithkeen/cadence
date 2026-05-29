@@ -1,21 +1,21 @@
 ---
-description: 读取 REQUIREMENTS.md，通过对话锁定技术约定，产出 SPEC.md 与 SPEC.html
+description: 读取 pai 产出的需求 md，通过对话锁定技术约定，产出 may-<主题>.md 技术设计文档
 allowed-tools: Read, Write, Bash, Agent, AskUserQuestion
-argument-hint: "[cycle-slug]"
+argument-hint: "<pai-需求.md 路径>"
 ---
 
 <命令目的>
-本命令只做"技术设计"，唯一目标：在已锁定的需求基础上，把技术约定钉死，产出 SPEC.md / SPEC.html——详细到下游 plan-agent 拿着它就能直接做出确切的实施计划，不必回头确认、不必返工。
+本命令只做"技术设计"，唯一目标：在已锁定的需求基础上，把技术约定钉死，产出 `may-<主题>.md`——详细到下游拿着它就能直接做出确切的实施计划，不必回头确认、不必返工。
 
-入口：必须已经存在 `.cadence/cycle-<slug>/REQUIREMENTS.md`（由 `/cadence:requirements` 产出）。
+入口：必须由参数显式给出一份 `pai` 产出的需求文档路径（通常是 `.cadence/pai-<主题>.md`，由 `/cadence:pai` 产出）。本命令**不扫描、不猜测**，路径缺失或文件不存在即报错退出。
 
-三件事最终都要落到 SPEC.md：
+三件事最终都要落到 `may-<主题>.md`：
 
-1. **做什么 / 不做什么** — 从 REQUIREMENTS.md 继承（必要时本命令内修订）
+1. **做什么 / 不做什么** — 从 pai 需求文档继承（必要时本命令内修订）
 2. **技术约定** — 技术栈、模块边界、接口、关键流程不留模糊（本命令的核心产出）
-3. **验证标准** — 从 REQUIREMENTS.md 继承
+3. **验证标准** — 从 pai 需求文档继承
 
-落档时机：B-4 一次性把"需求段（来自 REQUIREMENTS.md，含本命令内的修订）+ 设计段"写入 SPEC.md；B-6 删除中间产物 REQUIREMENTS.md。
+落档时机：B-4 一次性把"需求段（来自 pai 文档，含本命令内的修订）+ 设计段"写入 `may-<主题>.md`。**源 pai 文档保留不动，不删、不改回写。**
 </命令目的>
 
 <全局规则>
@@ -24,7 +24,7 @@ argument-hint: "[cycle-slug]"
 - **用户决策点规范**：每轮最多 1~2 个问题，不连珠炮。所有需用户回答的问题必须用 `AskUserQuestion`（决策型把选项写清；开放型预判 2-3 个常见答案做选项，工具自动追加 Other；一次最多 4 题、每题 2-4 选项）
 - **无快速通过出口**：用户即使说"别问了直接落档"，自检没走完就继续问
 - **选型类决策先摆方案**：识别到技术选型 / 模块拆法 / 算法 / 持久化方式等关键决策点，**先用一次 AskUserQuestion 把 2-3 个备选 + 推荐 + 理由摆出来让用户选**，再就选定方向展开细节追问。禁止把方案对比和细节追问揉进同一次 AskUserQuestion
-- **research 自包含**：所有引用了 research 的决策，关键事实（具体值 / 字段名 / endpoint / 限流参数 / 协议字段等）必须 inline 到 SPEC 设计段对应小节。下游 plan-agent 默认只读 SPEC.md，靠 `research/*.md` 存在兜底不可靠
+- **research 自包含**：所有引用了 research 的决策，关键事实（具体值 / 字段名 / endpoint / 限流参数 / 协议字段等）必须 inline 到 `may-<主题>.md` 设计段对应小节。下游默认只读这份文档，靠 `research/*.md` 存在兜底不可靠
 
 </全局规则>
 
@@ -50,74 +50,67 @@ AskUserQuestion([
 
 <主流程>
 
-# 阶段 0：解析参数 + 定位 cycle
+# 阶段 0：解析参数 + 定位 pai 需求文档
 
-参数 `$ARGUMENTS` 解析规则：
+参数 `$ARGUMENTS` 是一份 pai 需求文档的路径。
 
-1. 去掉两侧空白；剥掉可能的 `cycle-` 前缀，得到 `<slug>`
-2. 拼出目标目录：`.cadence/cycle-<slug>/`
+**无参数：** 一行报错退出：
+
+```
+❌ 缺少 pai 需求文档路径。用法：/cadence:may <pai-需求.md 路径>
+请先跑 /cadence:pai 产出需求文档，再把它的路径传进来。
+```
 
 **有参数：**
 
-- 目录不存在 → 一行报错退出：
+1. 去掉两侧空白，得到 `<pai-path>`
+2. `<pai-path>` 含非法字符或明显不是文件路径 → 一行报错退出：`❌ 非法的文档路径：<原始参数>`
+3. 文件不存在（以 Read 失败或 `ls` 校验为准）→ 一行报错退出：
 
-  ```
-  ❌ Cycle 目录不存在：.cadence/cycle-<slug>/
-  请先跑 /cadence:requirements <slug> 建立 cycle 并锁定需求。
-  ```
+   ```
+   ❌ 需求文档不存在：<pai-path>
+   请确认路径，或先跑 /cadence:pai 产出需求文档。
+   ```
 
-- 目录存在但缺 `REQUIREMENTS.md` → 一行报错退出：
+**推导主题 `<主题>`（用于命名产物）：**
 
-  ```
-  ❌ REQUIREMENTS.md 未找到：.cadence/cycle-<slug>/REQUIREMENTS.md
-  请先跑 /cadence:requirements <slug> 锁定需求。
-  ```
+- 取 `<pai-path>` 的文件名（basename），去掉 `.md` 后缀
+- 若文件名以 `pai-` 开头，剥掉该前缀，剩余部分即 `<主题>`
+- 否则直接用去后缀的文件名作为 `<主题>`
+- 产物路径定为 `.cadence/may-<主题>.md`
 
-- 目录存在 + 已有 `SPEC.md` → AskUserQuestion：
+**产物已存在检查：** 若 `.cadence/may-<主题>.md` 已存在 → AskUserQuestion：
 
-  ```
-  AskUserQuestion([
-    {
-      header: "已有 SPEC",
-      question: "Cycle `<slug>` 已存在 SPEC.md，怎么处理？",
-      multiSelect: false,
-      options: [
-        { label: "重新设计覆盖", description: "丢弃已有 SPEC.md/SPEC.html，从 B-1 重新设计" },
-        { label: "退出",         description: "不动现有产物，直接结束本命令" }
-      ]
-    }
-  ])
-  ```
-
-  - 选「重新设计覆盖」→ 进入 B-0
-  - 选「退出」→ 礼貌结束
-
-  注意：到了这一步说明 REQUIREMENTS.md 也存在（spec 命令完成时不删 SPEC.md，但会删 REQUIREMENTS.md；如果 SPEC.md 存在却 REQUIREMENTS.md 也在，是用户回退跑了 requirements 后又来跑 spec 的合理路径）。
-
-**无参数：**
-
-```bash
-ls -dt .cadence/cycle-*/ 2>/dev/null
+```
+AskUserQuestion([
+  {
+    header: "已有设计",
+    question: "`.cadence/may-<主题>.md` 已存在，怎么处理？",
+    multiSelect: false,
+    options: [
+      { label: "重新设计覆盖", description: "丢弃已有 may-<主题>.md，从 B-0 重新设计" },
+      { label: "退出",         description: "不动现有产物，直接结束本命令" }
+    ]
+  }
+])
 ```
 
-- 0 个 → 一行报错退出：`❌ 未找到任何 cycle 目录。请先跑 /cadence:requirements 创建 cycle`
-- 1 个 → 直接采纳，按"目录存在"分支处理
-- 2-4 个 → AskUserQuestion 让用户选（label 取 slug，description 取 mtime 与 REQUIREMENTS.md / SPEC.md 是否存在）
-- \> 4 个 → 列出全部 cycle（按 mtime 倒序），AskUserQuestion 用前 3 个最近的 + Other 输入框；用户在 Other 里填 slug
+- 选「重新设计覆盖」→ 进入 B-0
+- 选「退出」→ 礼貌结束
 
-确认 cycle 后进入 B-0。
+确认后进入 B-0。
 
 ---
 
 # 阶段 B：设计
 
-## B-0：加载 REQUIREMENTS.md + 已有 research
+## B-0：加载 pai 需求文档 + 已有 research
 
-1. **Read `.cadence/cycle-<slug>/REQUIREMENTS.md`** 全文 → 解析出"标题 / 段落叙述 / 做什么 / 不做什么 / 验证标准"，作为内存中的「需求段共识」起点
+1. **Read `<pai-path>`** 全文 → 解析出"一句话目标 / 依赖与前提 / 范围内 / 范围外 / 输入与输出·关键行为 / 边界与异常 / 验收标准"，映射为内存中的「需求段共识」起点（做什么 = 范围内、不做什么 = 范围外、验证标准 = 验收标准，叙述部分取一句话目标 + 依赖与前提）
 2. 加载已有 research：
 
    ```bash
-   ls .cadence/cycle-<slug>/research/ 2>/dev/null
+   ls .cadence/research/ 2>/dev/null
    ```
 
    有则 Read 全部 `.md` 作为上下文；无则跳过
@@ -158,8 +151,8 @@ Agent(
 6. **关键流程** — 主路径 + 重要分支的步骤
 7. **非功能性约束** — 性能 / 安全 / 可观测性 / 部署相关的硬约束
 8. **风险与不确定项** — **每一项必须现场拍板**。信息不够就调研或追问，不允许悬置到实施阶段
-9. **视觉与交互风格** — 仅含 UI / 页面 / 组件产出的 cycle 触发，纯后端 / 库 / CLI cycle 跳过本维度。覆盖：
-    - **视觉模式（mode）** — 每块 UI 产出是 `greenfield`（新项目 / 新页面 / 与既有页面无视觉关联的独立模块，可放飞）还是 `inherit`（在已有页面上改造 / 新增功能 / 新增小界面，必须守恒对齐既有视觉）。一个 cycle 内可能两种共存，逐块确认
+9. **视觉与交互风格** — 仅含 UI / 页面 / 组件产出的需求触发，纯后端 / 库 / CLI 需求跳过本维度。覆盖：
+    - **视觉模式（mode）** — 每块 UI 产出是 `greenfield`（新项目 / 新页面 / 与既有页面无视觉关联的独立模块，可放飞）还是 `inherit`（在已有页面上改造 / 新增功能 / 新增小界面，必须守恒对齐既有视觉）。可能两种共存，逐块确认
     - **美学方向（aesthetic_direction）** — 仅 `greenfield` 块需要拍板，**必须从下列 12 枚举里选一个**（不接受"现代简洁 / 整洁干净 / 通用风格"这类空话；选不出来就先用 `AskUserQuestion` 摆方案）：`brutalist` / `editorial` / `luxury-refined` / `playful` / `retro-futurist` / `industrial` / `soft-pastel` / `art-deco` / `maximalist-chaos` / `brutally-minimal` / `cyberpunk` / `organic-natural`
     - **参考站点 / 参考图** — 仅 `greenfield` 块需要；若用户能给具体 URL / 截图，记录为 `reference_urls`；说不出来允许为空
     - **既有 design system 锚点** — 仅 `inherit` 块需要，确认对齐目标（哪个页面 / 哪套组件 / 哪份 design token）
@@ -176,12 +169,12 @@ Agent(
   - 两个都"否"则边界要重画
 - [决策完整] 所有识别到的不确定项都已现场拍板？
 - [决策记录] 本轮所有"选 X 不选 Y"的选型已写入决策清单段？
-- [前端覆盖] 若本 cycle 含 UI / 页面 / 组件产出：每块产出的 mode（greenfield / inherit）已确认？greenfield 块的 aesthetic_direction 已落到 12 枚举之一？inherit 块的对齐锚点已点明？设计语言 / 色板 / 排版 / 组件库选型 / 暗色模式 / 关键交互均已敲定？无 UI 产出则跳过本项
-- 把自己当下游实施者：拿到当前 SPEC，能直接产出实施计划吗？关键技术决策有没有遗漏到"实施时凭印象"的程度？
+- [前端覆盖] 若本需求含 UI / 页面 / 组件产出：每块产出的 mode（greenfield / inherit）已确认？greenfield 块的 aesthetic_direction 已落到 12 枚举之一？inherit 块的对齐锚点已点明？设计语言 / 色板 / 排版 / 组件库选型 / 暗色模式 / 关键交互均已敲定？无 UI 产出则跳过本项
+- 把自己当下游实施者：拿到当前设计文档，能直接产出实施计划吗？关键技术决策有没有遗漏到"实施时凭印象"的程度？
 
 任一不通过 → 继续追问。全部通过 → B-3 留口。
 
-## B-2：发现需求漏洞 → 就地修，不回写 REQUIREMENTS.md
+## B-2：发现需求漏洞 → 就地修，不回写 pai 文档
 
 设计追问中发现需求段（内存中的共识）不清晰、有遗漏或自相矛盾时：
 
@@ -201,9 +194,9 @@ Agent(
    ])
    ```
 
-2. **用户选"按建议改"：** 仅更新内存中的需求段共识，**REQUIREMENTS.md 文件保持不动**（最终 B-4 写 SPEC.md 时一并落入修订后的需求；B-6 会把 REQUIREMENTS.md 删掉）。输出一行：
+2. **用户选"按建议改"：** 仅更新内存中的需求段共识，**源 pai 文档保持不动**（最终 B-4 写 `may-<主题>.md` 时一并落入修订后的需求）。输出一行：
 
-   > ✏️ 已更新内存中的需求段 `<段落>`，REQUIREMENTS.md 保持原样。继续设计追问。
+   > ✏️ 已更新内存中的需求段 `<段落>`，pai 文档保持原样。继续设计追问。
 
    继续设计追问。
 
@@ -215,13 +208,13 @@ Agent(
 
 - `<阶段名>` = 设计
 - `<继续动作>` = 直接落档
-- `<继续描述>` = 把当前共识写成 SPEC.md / SPEC.html，结束 spec
+- `<继续描述>` = 把当前共识写成 may-<主题>.md，结束 may
 
 选"设计还想再聊" → 回 B-1；选"直接落档" → B-4。
 
-## B-4：落档 SPEC.md
+## B-4：落档 may-<主题>.md
 
-Write `.cadence/cycle-<slug>/SPEC.md`，把内存中的需求段共识（来自 REQUIREMENTS.md，可能含 B-2 修订）与设计段沉淀**一次性整体写入**：
+Write `.cadence/may-<主题>.md`，把内存中的需求段共识（来自 pai 文档，可能含 B-2 修订）与设计段沉淀**一次性整体写入**：
 
 ```markdown
 # <自然语言标题>
@@ -270,8 +263,8 @@ Write `.cadence/cycle-<slug>/SPEC.md`，把内存中的需求段共识（来自 
 - 性能 / 安全 / 可观测 / 部署等
 
 ## 视觉与交互风格
-<!-- 仅 UI / 页面 / 组件 cycle 写本节，纯后端 / 库 / CLI cycle 整节删掉 -->
-<!-- 一个 cycle 内可能 greenfield / inherit 两种 mode 共存，按 UI 产出块逐块写 -->
+<!-- 仅 UI / 页面 / 组件需求写本节，纯后端 / 库 / CLI 需求整节删掉 -->
+<!-- 可能 greenfield / inherit 两种 mode 共存，按 UI 产出块逐块写 -->
 
 ### UI 产出块清单
 - <块名 1>：mode = greenfield | inherit
@@ -284,7 +277,7 @@ Write `.cadence/cycle-<slug>/SPEC.md`，把内存中的需求段共识（来自 
 - **<块名 2>（inherit）**
   - 对齐锚点：<既有页面路径 / 组件库 / design token 来源>
 
-### 公用视觉规范（全 cycle 共通）
+### 公用视觉规范（全需求共通）
 - 色板：主色 <hex> / 强调色 <hex> / 中性色 <hex>
 - 排版：字体族 / 字号尺度
 - 组件库：<选型与版本>
@@ -298,68 +291,18 @@ Write `.cadence/cycle-<slug>/SPEC.md`，把内存中的需求段共识（来自 
 **结构要求：**
 
 - 「需求」段措辞严格（"用户能..."而非"支持..."），不省略边界条件；「验证标准」每条都要能被直接翻译成一个检查动作
-- 「设计」段结构化、信息密集、无装饰；不放图、不要 mermaid（HTML 里再画）；模块图用文字版（树状或表格）
-- 这份 SPEC.md 要回答的问题是"做什么 / 技术怎么约定 / 怎么算完成"，不写实施步骤、不拆任务、不写代码
+- 「设计」段结构化、信息密集、无装饰；不放图、不要 mermaid；模块图用文字版（树状或表格）
+- 这份文档要回答的问题是"做什么 / 技术怎么约定 / 怎么算完成"，不写实施步骤、不拆任务、不写代码
 
-## B-5：渲染 SPEC.html
+落档后进入 B-5。
 
-主 agent 不再亲自渲染 HTML，统一交给 `doc-to-html-renderer` 子 agent，**同步等待**它完成。
+## B-5：收尾
 
-```
-Agent(
-  subagent_type="cadence:doc-to-html-renderer",
-  description="渲染 SPEC.html",
-  prompt="
-[input_path]   .cadence/cycle-<slug>/SPEC.md
-[output_path]  .cadence/cycle-<slug>/SPEC.html
-[title]        <从 SPEC.md 第一行 # 标题解析；找不到就给 cycle slug>
-
-请渲染成单文件 HTML。
-"
-)
-```
-
-**返回处理：**
-
-- 成功 → B-6
-- 失败 → 把子 agent 简报原样转给用户，但**不中断** spec 命令（SPEC.md 已落档，HTML 用户可手动重试）。继续 B-6，收尾文案中标注 HTML 未生成
-
-## B-6：清理中间产物 REQUIREMENTS.md
-
-SPEC.md 已落档，REQUIREMENTS.md 完成使命：
-
-```bash
-rm -f .cadence/cycle-<slug>/REQUIREMENTS.md
-```
-
-- 成功 → 进入 B-7
-- 失败 → 不阻塞流程，记录失败原因，B-7 收尾文案追加一行提示用户手动清理
-
-## B-7：收尾
-
-**B-5 成功 + B-6 成功：**
-
-> ✅ Cycle `cycle-<slug>` 已落档：
-> - `.cadence/cycle-<slug>/SPEC.md`
-> - `.cadence/cycle-<slug>/SPEC.html`
+> ✅ 技术设计已落档：`.cadence/may-<主题>.md`
 >
-> 中间产物 `REQUIREMENTS.md` 已清理。
+> 源需求文档 `<pai-path>` 保留未动。
 >
-> 打开 SPEC.html 复核，再把 SPEC.md 交给下游实施（`/cadence:run <slug>`）。
-
-**B-5 失败：**
-
-> ✅ Cycle `cycle-<slug>` 已落档：
-> - `.cadence/cycle-<slug>/SPEC.md`
-> - SPEC.html 渲染失败（详见上方子 agent 简报），可后续手动重试
->
-> 中间产物 `REQUIREMENTS.md` 已清理。
->
-> 复核 SPEC.md，再交给下游实施（`/cadence:run <slug>`）。
-
-**B-6 失败（叠加在上面任一种之上，追加一行）：**
-
-> ⚠️ REQUIREMENTS.md 清理失败：`<失败原因>`，可手动 `rm` 清理。
+> 复核 may-<主题>.md，再交给下游实施。
 
 </主流程>
 
@@ -372,13 +315,13 @@ rm -f .cadence/cycle-<slug>/REQUIREMENTS.md
 每轮用户回复后、产出下一轮追问前，执行一次"调研扫描"：
 
 1. **列候选** — 从用户最新回复 + 设计进行中草稿挑出具名的库 / 框架 / 协议 / 标准 / 第三方服务 / 算法 / 业务领域术语
-2. **对照已调研** — `ls .cadence/cycle-<slug>/research/ 2>/dev/null`。文件名匹配 → 已覆盖，跳过
+2. **对照已调研** — `ls .cadence/research/ 2>/dev/null`。文件名匹配 → 已覆盖，跳过
 3. **对剩余候选逐个判断**是否命中下方触发条件
 4. **任意一个命中 → 必须 AskUserQuestion**
 
 ### 触发条件
 
-根本标准：会阻塞下游实施吗。判断方式：如果这个话题现在不调研，下游拿着 SPEC.md 做计划、或按计划写代码时，会因为 SPEC.md 设计段信息缺口而**做不出确切的计划 / 写不出能跑的代码**吗？典型阻塞场景（满足任一即触发）：
+根本标准：会阻塞下游实施吗。判断方式：如果这个话题现在不调研，下游拿着设计文档做计划、或按计划写代码时，会因为设计段信息缺口而**做不出确切的计划 / 写不出能跑的代码**吗？典型阻塞场景（满足任一即触发）：
 
 - **外部服务 / 第三方平台 / SDK / 云服务 / 模型 API** — 接口路径、鉴权方式、请求/响应结构、错误码、限流、模型 ID 命名约定，任一不清楚都让下游卡住
 - **版本敏感的库 / 框架** — 当前版本 breaking change、新 API 形状没把握
@@ -408,7 +351,7 @@ AskUserQuestion([
 
 ### 用户同意调研时
 
-1. **确保 research 子目录存在**（cycle 目录已建好）：`mkdir -p .cadence/cycle-<slug>/research`（幂等）
+1. **确保 research 目录存在**：`mkdir -p .cadence/research`（幂等）
 
 2. 调起 research-agent：
 
@@ -418,7 +361,7 @@ AskUserQuestion([
      description="调研 <topic>",
      prompt="
    [topic]       <一句话主题>
-   [output_dir]  .cadence/cycle-<slug>/research
+   [output_dir]  .cadence/research
 
    请按 research-agent 系统约定产出调研笔记，落到 output_dir 下。
    "
@@ -434,27 +377,25 @@ AskUserQuestion([
 
 <异常处理>
 
-- 用户回答完全不像开发任务（聊天闲聊、技术求助） → 礼貌说明 spec 用途，不强行进入流程
-- 用户中途说"算了不做了" → 不写后续文件，礼貌退出。已建的 cycle 目录与 REQUIREMENTS.md 不主动清理
-- `$ARGUMENTS` 含非法字符（`/` 之类） → 一行报错退出：`❌ 非法的 cycle slug：<原始参数>`
+- 用户回答完全不像开发任务（聊天闲聊、技术求助） → 礼貌说明 may 用途，不强行进入流程
+- 用户中途说"算了不做了" → 不写后续文件，礼貌退出。源 pai 文档不动
+- `$ARGUMENTS` 缺失或含非法字符 → 见阶段 0 报错退出
 - Bash / Write 失败 → 直接报告错误，不重试
 
 </异常处理>
 
 <产物>
 
-- `.cadence/cycle-<slug>/SPEC.md` — 需求段（继承自 REQUIREMENTS.md，含本命令内修订）+ 设计段（B-4 一次性写入）
-- `.cadence/cycle-<slug>/SPEC.html` — 智能渲染的可读 HTML（doc-to-html-renderer 产出），供用户阅读与复核
-- `.cadence/cycle-<slug>/research/*.md` — 按需调研的笔记（如有）
-- ~~`.cadence/cycle-<slug>/REQUIREMENTS.md`~~ — B-6 主动删除（中间产物，使命已尽）
+- `.cadence/may-<主题>.md` — 需求段（继承自 pai 文档，含本命令内修订）+ 设计段（B-4 一次性写入）
+- `.cadence/research/*.md` — 按需调研的笔记（如有）
+- 源 `<pai-path>` 文档 — 保留未动
 
 </产物>
 
 <成功标准>
 
-- [ ] `.cadence/cycle-<slug>/SPEC.md` 存在，三件齐全：做什么 / 技术约定 / 验证标准
-- [ ] 已调起 `doc-to-html-renderer`，成功则 `SPEC.html` 存在；失败则收尾文案明确标注
-- [ ] `.cadence/cycle-<slug>/REQUIREMENTS.md` 已被清理（B-6 失败则收尾文案明确标注）
-- [ ] 若产生过调研，`.cadence/cycle-<slug>/research/*.md` 存在，且关键事实已 inline 到 SPEC.md
+- [ ] `.cadence/may-<主题>.md` 存在，三件齐全：做什么 / 技术约定 / 验证标准
+- [ ] 源 pai 文档保留未动
+- [ ] 若产生过调研，`.cadence/research/*.md` 存在，且关键事实已 inline 到 may-<主题>.md
 
 </成功标准>
