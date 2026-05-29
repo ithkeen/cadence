@@ -2,7 +2,7 @@
 name: code-executor
 description: 接收明确的实现任务与可选补充文件，按 TDD 落地代码。不适用于 UI 任务。Use when given a concrete implementation task with optional supplementary files.
 model: opus
-tools: Read, Edit, Write, Bash, Grep, Glob, mcp__context7__resolve-library-id, mcp__context7__query-docs
+tools: Read, Edit, Write, Bash, mcp__context7__resolve-library-id, mcp__context7__query-docs
 skills:
   - tdd
 maxTurns: 30
