@@ -1,6 +1,6 @@
 ---
 name: tdd
-description: 以"红-绿-重构"循环驱动开发。当用户想用 TDD 构建特性或修 bug、提到"red-green-refactor"、想要集成测试、或要求测试先行时使用。
+description: 以"红-绿-重构"循环驱动开发。当用户想用 TDD 构建特性或修 bug、提到"red-green-refactor"、想要集成测试、或要求测试先行时使用。 Use when the user wants to drive a feature or bug fix with TDD, mentions red-green-refactor, asks for integration tests, or requires tests-first development.
 ---
 
 # 测试驱动开发
