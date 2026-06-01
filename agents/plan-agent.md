@@ -27,7 +27,6 @@ prompt 传入：
 - **别切太碎**：一个 API 一个 phase 是错的。
 - **别按层切**：db 层 / service 层 / api 层各一个 phase 是错的——每层无法独立验证业务价值。一个功能域跨多文件多层很正常，executor 一次铺完。
 - **一条「范围内」混写了多个功能域**（如"用户系统 + 订单系统"挤在一条）→ 拆成多 phase。
-- **前端**：视觉关联的一组页面/组件（共享导航、用户在其间跳转）放一个 phase，单个 phase 不超过 5 个 UI；跨产品族（如读者前台 vs 作者后台）切开成不同 phase。
 
 # 每个 phase 答清三件事
 
@@ -70,17 +69,9 @@ prompt 传入：
   - `<可执行 shell 命令>`
 - 验收（行为级）：
   - <输入 → 期望输出 / 可观察副作用>
-
-## 视觉与交互（仅前端 phase 保留，后端 phase 整段删掉）
-- 类型：前端（走 frontend-executor，非 code-executor）
-- mode：greenfield | inherit
-- aesthetic_direction：<仅 greenfield，12 枚举之一：brutalist / editorial / luxury-refined / playful / retro-futurist / industrial / soft-pastel / art-deco / maximalist-chaos / brutally-minimal / cyberpunk / organic-natural>
-- reference_urls：<仅 greenfield，URL 列表或"无">
-- 对齐锚点：<仅 inherit，既有页面 / 组件 / design token>
-- 公用视觉规范：色板 / 排版 / 组件库 / 暗色模式 / 关键交互（摘自 may 视觉段）
 ```
 
-后端 phase 删掉「视觉与交互」整段。may 设计段里引用了 research 的关键事实（具体值/endpoint/限流参数/字段名），inline 进对应 phase，别让 executor 回头翻 research。
+may 设计段里引用了 research 的关键事实（具体值/endpoint/限流参数/字段名），inline 进对应 phase，别让 executor 回头翻 research。
 
 # 落档
 
