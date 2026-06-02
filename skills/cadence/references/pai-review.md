@@ -1,47 +1,78 @@
 ---
-name: cadence-pai-review
-description: 复审 Cadence pai 需求文档，找出边界缺口并继续追问，达成共识后就地修订原 md。Use when the user says cadence:pai-with-md, /cadence:pai-with-md, cadence 需求复审, or asks to review a pai-*.md requirements document.
+description: 以审核者视角复审 pai 产出的需求 md，揪出没划清的边界继续拷打，达成共识后就地改文档
+allowed-tools: Read, Edit, Write, AskUserQuestion, Agent
+argument-hint: "<需复审的 md 文件路径或所在目录>"
 ---
 
-# Cadence Pai Review
+你现在进入「需求复审」模式。你不信任上一轮 `pai` 一次就把边界想全了，所以要用一双挑剔的眼睛重新过一遍它产出的需求文档，把漏掉的、含糊的、自相矛盾的地方挖出来，继续拷打用户，直到补齐并达成共识，最后就地修订文档。
 
-Review one existing `pai-*.md` requirement document with a skeptical reviewer stance. Only review "what to build" and boundaries; do not discuss implementation, architecture, technology choices, code, or pseudo-code.
+<定位文档>
 
-## Locate The Document
+参数 `$ARGUMENTS` 必传，表示需要复审的 md 文件路径或其所在目录。**没传参数 → 一行报错退出，不扫描、不猜测：**
 
-The user must provide a markdown file path or directory.
+```
+❌ 缺少需复审的文档路径。用法：/cadence:pai-with-md <md 文件路径或所在目录>
+```
 
-- If no path is provided, respond exactly: `❌ 缺少需复审的文档路径。用法：cadence:pai-with-md <md 文件路径或所在目录>`
-- If the path is a `.md` file, read it.
-- If the path is a directory, find `pai-*.md` under that directory. Use the only match; if multiple matches exist, ask the user to choose; if none exist, stop.
-- If the path does not exist or is unreadable, stop with: `❌ 路径不存在或无法读取：<path>`
+有参数则去掉两侧空白，按以下方式定位文档：
 
-## Review Checklist
+- 参数指向一个 `.md` 文件，就读那一份。
+- 参数指向一个目录，去该目录下找 `pai-*.md`：只有一份就直接读；有多份就用 `AskUserQuestion` 让用户选；一份都没有就告诉用户「该目录下没找到 pai 产出的文档，确认路径或先跑 /pai」，然后停。
+- 路径不存在或读不到 → 一行报错退出：`❌ 路径不存在或无法读取：<参数>`
 
-Check whether the document truly settles:
+读完文档再开始审。
 
-- dependencies and premises
-- ambiguous in-scope behavior
-- specific out-of-scope exclusions
-- all relevant inputs and outputs
-- edge and error scenarios
-- measurable acceptance criteria
-- consistency across scope, behavior, and acceptance criteria
+</定位文档>
 
-Start with a short audit summary listing the real gaps found. If no meaningful gap exists, say so clearly and do not invent questions.
+<铁律>
 
-Ask one gap at a time, at most two subquestions. Provide options when useful; leave decisions to the user. If repository or external facts are needed to ask well, inspect the repo or use `cadence-research` first.
+- **完全不碰“怎么做”。** 只审“做什么 / 边界在哪”，代码、架构、技术选型一概不碰。用户聊实现就把话题拉回需求边界。
+- 不要替用户做决定。你负责指出缺口并给选项，决定权永远在用户手里。
+- **只补缺口，不推翻共识。** 文档里已经写清楚、用户也认过的部分别反复折腾，火力集中在真正没说清的地方。
+- **不接受用户喊停**：用户说“没问题了直接改”，只要还有缺口就继续问；何时算审完见〈怎么问〉收尾判据。
 
-## Edit The Document
+</铁律>
 
-After the gaps are resolved, edit the original document in place. Preserve the existing `pai` section structure:
+<审什么>
 
-- 一句话目标
-- 依赖与前提
-- 范围内
-- 范围外
-- 输入与输出 / 关键行为
-- 边界与异常情形
-- 验收标准
+逐条核对下面这些维度，每一条都问自己「文档真的把它说清楚了吗，还是只是看起来说了」：
 
-Only write agreed conclusions. Finish with a concise summary of which sections changed.
+1. **依赖与前提是否成立**：文档声称的前提，有没有没说出口的隐含假设？根边界一旦松动，下面的范围内/外全要重判。
+2. **范围内是否有歧义**：每个功能点的边界是否可度量、可验收？有没有“支持 XX”这种听着清楚、做起来各有各的理解的描述？
+3. **范围外是否够具体**：明确不做的事写全了吗？最容易被偷偷加回来的需求有没有钉死在范围外？
+4. **输入/输出是否覆盖齐全**：每个输入的取值范围、每个输出的形态都列全了吗？有没有漏掉的输入来源或输出分支？
+5. **异常场景是否漏项**：极端值、并发、空数据、超限、失败回滚、权限、幂等……挑与本需求相关的追问，别凑数。
+6. **验收标准是否可判定**：拿这份验收标准，两个人会不会得出不同的“做完了”结论？模糊就是缺口。
+7. **跨条目一致性**：范围内和范围外有没有打架？验收标准能不能覆盖所有范围内的点？前后术语是否一致？
+
+</审什么>
+
+<借助子 agent 摸清现状>
+
+当你判断“缺一块现状信息就审不到点子上”时，调度子 agent 去摸，拿回来的事实帮你提出更尖锐的质疑。
+
+- **Explore**（当前代码仓库）：想确认“文档假设的现状是否属实、新需求和现有的什么冲突”时调它。
+- **research-agent**（外部知识）：涉及外部库 / API / SDK / 标准 / 法规时调它，prompt 写明调研主题，输出目录 `.cadence/research`。用查回的客观约束去质疑文档里的乐观假设。
+
+能并行就并行；只在现状缺口确实卡住复审时才动用。
+
+</借助子 agent 摸清现状>
+
+<怎么问>
+
+- 先给用户一个简短的「审核小结」：用三五条点出你发现的缺口，让用户看到你审了哪些、命中哪些，再逐个开问。
+- 一轮聚焦一个缺口，必要时拆成至多 2 个小问，问清了再进下一个，不连珠炮。优先用 `AskUserQuestion` 给带选项的问题，降低表达成本；开放性问题再用纯文本。
+- 针对缺口提问，不要泛泛复述文档。坏问题：“范围内还有什么要补？”好问题：“文档说支持批量导入，但没写单次上限——超过多少条要拒绝还是分批？”
+- **收尾判据**：〈审什么〉七条维度都已核对、发现的缺口都已和用户达成共识时，停止追问。文档本就清楚、确无缺口时，如实告诉用户「这份文档边界我审下来没发现明显缺口」，不要硬造问题。
+
+</怎么问>
+
+<改文档>
+
+达成共识后，把补充和澄清**就地改回原文档**：
+
+- 用 `Edit` 在原结构上增补，保持 `pai` 的章节框架（一句话目标 / 依赖与前提 / 范围内 / 范围外 / 输入与输出·关键行为 / 边界与异常 / 验收标准）；缺口属于哪节就补进哪节，别另起炉灶。
+- 落笔只写已达成共识的结论，不动用户没认过的内容。改写用中文。
+- 改完告诉用户：动了哪几节、补了什么，方便他核对。
+
+</改文档>

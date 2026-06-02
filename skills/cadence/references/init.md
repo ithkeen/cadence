@@ -1,20 +1,14 @@
 ---
-name: cadence-init
-description: 初始化 Codex 项目的 Cadence 工作流规则。Use when the user asks to run cadence init, cadence:init, 初始化 cadence, or make the current project ready for the Cadence workflow in Codex.
+description: 初始化项目根 CLAUDE.md 规则块（幂等）
+allowed-tools: Bash
 ---
 
-# Cadence Init
+执行初始化脚本，把脚本输出原样转给用户，末尾追加：
 
-Run the Codex initializer from the Cadence plugin repository. Resolve the plugin root from the active `cadence` skill: the plugin root is two directories above `skills/cadence/SKILL.md`.
+> ✅ cadence 初始化完成。下一步：`/cadence:pai` 开启第一个 cycle。
+
+脚本非零退出则报告 stderr 原文，不重试。
 
 ```bash
-bash <cadence-plugin-root>/scripts/init-cadence-codex.sh
-```
-
-Run it with the target project as the current working directory. Assume the current working directory is the target project unless the user explicitly gives another path.
-
-Report the script output verbatim. If the script exits non-zero, report stderr and stop. On success, append:
-
-```text
-✅ cadence 初始化完成。下一步：用「cadence:pai」开启第一个 cycle。
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/init-cadence.sh"
 ```

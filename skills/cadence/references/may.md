@@ -1,58 +1,73 @@
 ---
-name: cadence-may
-description: Cadence 技术设计工作流，读取 pai 需求文档，只做技术设计并产出 may design markdown. Use when the user says cadence:may, /cadence:may, 技术设计, or asks to turn a pai-*.md requirements document into a Cadence may design document.
+description: 读取 pai 产出的需求 md，只做技术设计（不重做需求分析），产出 may-<主题>.md
+allowed-tools: Read, Write, Bash, Agent, AskUserQuestion
+argument-hint: "<pai-需求.md 路径>"
 ---
 
-# Cadence May
+# 这个命令做什么
 
-Read a `pai-*.md` requirement document and produce `may-<主题>.md` in the same directory. Do not rewrite requirements. The output is the original pai body verbatim, followed by `---` and a `# 设计` section.
+需求已由 `/cadence:pai` 锁定。本命令**不重做需求分析**，只回答一个问题：要实现这些需求，技术上怎么定？——技术栈、模块怎么拆、几个接口、数据怎么存、关键流程怎么走，全部钉到下游拿着文档就能直接做实施计划、不必返工。
 
-## Locate Input
+产出 `may-<主题>.md` = pai 需求正文**原样保留** + 其下追加 `# 设计` 段。源 pai 文档不动。
 
-The user must provide a `pai-*.md` path.
+# 全局约束
 
-- If missing, respond: `❌ 缺少 pai 需求文档路径。用法：cadence:may <pai-需求.md 路径>`
-- If unreadable, respond: `❌ 路径不可读：<path>`
-- Derive `<主题>` from the file name by removing `.md` and an optional leading `pai-`.
-- If `may-<主题>.md` already exists, ask whether to overwrite or exit.
+- 全程中文。主 agent 不直接读项目源码——需要了解现有代码时调起 Explore 子 agent（见下），侦察结果不向用户复述。
+- 不拆任务、不写代码/伪代码/函数名（属下游实施），不改写需求（属 pai）。
+- 决策点用 `AskUserQuestion`，每轮最多 1~2 题。**选型类决策（技术栈/模块拆法/算法/持久化等）先用一次 AskUserQuestion 摆 2-3 个备选+推荐+理由让用户选定方向**，再就该方向追问细节——别把方案对比和细节追问揉进同一问。
+- 用户说"别问了直接落档"，设计没聊透就继续问。
+- 引用了 research 的关键事实（具体值/字段名/endpoint/限流参数/协议字段）必须 inline 到设计段对应小节，下游默认只读这份文档。
 
-## Design Rules
+# 流程
 
-- Output Chinese.
-- Do not redo requirement analysis. Treat the pai document as agreed scope.
-- Do not write code, pseudo-code, task phases, or implementation function names.
-- Inspect the codebase only when needed for technical decisions.
-- For external libraries, APIs, SDKs, standards, regulations, model APIs, breaking changes, or version-sensitive facts, use `cadence-research` and inline key facts into the design.
-- Ask at most 1-2 questions per round. For technology choices, first present 2-3 options with one recommended option and the reason, then let the user decide.
-- If the user says to write immediately but design decisions are still missing, continue asking.
+## 0. 解析参数 + 定位
 
-Cover the dimensions that apply:
+`$ARGUMENTS` 是 pai 需求文档路径。缺失则报错退出：
 
-- technology stack, including named test framework and exact test command
-- module boundaries
-- data model
-- interface design
-- error and failure semantics
-- key workflow
-- non-functional constraints
-- risks and decisions
+```
+❌ 缺少 pai 需求文档路径。用法：/cadence:may <pai-需求.md 路径>
+请先跑 /cadence:pai 产出需求文档，再把它的路径传进来。
+```
 
-For UI work, also settle:
+去空白得 `<pai-path>`。**主题**：取文件名去 `.md`，若以 `pai-` 开头则剥掉前缀。**产物路径**：`<pai 同目录>/may-<主题>.md`（即 `.cadence/cycle-<主题>/may-<主题>.md`）。
 
-- each UI block mode: `greenfield` or `inherit`
-- `greenfield` aesthetic direction from: `brutalist`, `editorial`, `luxury-refined`, `playful`, `retro-futurist`, `industrial`, `soft-pastel`, `art-deco`, `maximalist-chaos`, `brutally-minimal`, `cyberpunk`, `organic-natural`
-- `inherit` visual anchor
-- palette, typography, component library with version, dark mode, key interaction states
+产物已存在 → AskUserQuestion 问「覆盖重做」还是「退出」。
 
-## Done Criteria
+## 1. 加载
 
-Every in-scope requirement and every acceptance criterion has a technical counterpart; module boundaries are clear; uncertainty is settled; choices have reasons; UI work has mode and visual rules.
+Read `<pai-path>` 全文，作为**既定需求**通读（要做什么、给谁、验证标准）——不重构、不改写，落档时原样保留。pai 正文即结论；`.cadence/research/` 是过程材料，此处不全量读，按需在阶段 2 定点取用。
 
-Then ask whether to write the document.
+## 2. 设计追问循环
 
-## Design Section Template
+需要了解现有代码（模块结构、接口形态、实现位置）时调起 Explore：
+
+```
+Agent(subagent_type="Explore", description="<一句话定位>",
+      prompt="<找什么 / 哪些路径 / 期望产出。广度：quick|medium|very thorough>")
+```
+
+**每轮**：① 调研扫描（见下）→ ② 追问 1~2 题 → ③ 判断是否聊透。
+某条 pai 需求模糊到无法据此做技术决策 → 直接问用户澄清（不改写 pai 文档），结果体现进设计段。
+
+**覆盖维度**（按需求性质挑相关的问，不必逐项）：技术选型（**含测试框架与运行命令，必问到具名**）、模块划分、数据模型、接口设计、错误/失败语义、关键流程、非功能约束（性能/安全/可观测/部署）、风险与不确定项（**每项现场拍板，不悬置到实施**）。
+
+**含 UI/页面/组件产出**才追加视觉维度（纯后端/库/CLI 跳过）：
+- 每块 UI 产出逐块定 **mode**：`greenfield`（新页面/独立模块，可放飞）或 `inherit`（在既有页面上改造，须对齐既有视觉），两种可共存。
+- `greenfield` 块定 **aesthetic_direction**，必须从这 12 个里选一个（拒绝"现代简洁"这类空话，选不出就 AskUserQuestion 摆方案）：`brutalist` / `editorial` / `luxury-refined` / `playful` / `retro-futurist` / `industrial` / `soft-pastel` / `art-deco` / `maximalist-chaos` / `brutally-minimal` / `cyberpunk` / `organic-natural`；有参考 URL/截图记为 reference_urls。
+- `inherit` 块定对齐锚点（哪个页面/组件/design token）。
+- 公用：色板（hex）、字体与排版、组件库选型（带版本）、暗色模式、关键交互动效。
+
+**聊透的标准**（内部自检，不输出过程）：pai 每个"要做的事"和每条验证标准都有技术方案承接；每个新增/改动模块边界清晰（不读内部能懂它做什么、改内部不破坏消费者）；不确定项全部拍板；选型理由已记入决策清单；含 UI 则各块 mode/aesthetic/锚点/视觉规范均已定。把自己当下游：拿这份设计能直接产出实施计划吗？没聊透就回到追问。
+
+聊透后 AskUserQuestion 问「直接落档」还是「再聊」。
+
+## 3. 落档
+
+Write `<pai 同目录>/may-<主题>.md`，pai 正文原样在上、`# 设计` 段在下，一次写入：
 
 ```markdown
+<pai 文档正文原样，不改写、不精简>
+
 ---
 
 # 设计
@@ -80,14 +95,48 @@ Then ask whether to write the document.
 - 性能 / 安全 / 可观测 / 部署
 
 ## 视觉与交互风格
-<!-- 仅 UI 需求写本节，纯后端 / 库 / CLI 删除 -->
+<!-- 仅 UI 需求写本节，纯后端 / 库 / CLI 整节删掉 -->
+### UI 产出块清单
+- <块名>：mode = greenfield | inherit
+### 各块视觉锚点
+- **<块名>（greenfield）**：aesthetic_direction = <12 枚举之一>；reference_urls = <URL 或"无">
+- **<块名>（inherit）**：对齐锚点 = <既有页面 / 组件库 / design token>
+### 公用视觉规范
+- 色板：主色 <hex> / 强调色 <hex> / 中性色 <hex>
+- 排版：字体族 / 字号尺度
+- 组件库：<选型与版本>
+- 暗色模式：是 / 否
+- 关键交互：<hover / 过渡 / 加载态 / 微动效>
 
 ## 决策清单
 - 选 X 不选 Y，因为 ...
 ```
 
-Finish with:
+设计段结构化、信息密集、不放图、不用 mermaid（模块图用文字树或表格）。
 
-```text
-✅ 技术设计已落档：<may-path>，源需求文档未动。复核后交下游实施。
+收尾：
+
+> ✅ 技术设计已落档：`.cadence/cycle-<主题>/may-<主题>.md`，源需求文档未动。复核后交下游实施。
+
+# 调研循环（每轮追问前扫描）
+
+1. 从用户最新回复 + 设计草稿挑出具名的库/框架/协议/标准/第三方服务/SDK/云服务/模型 API/算法。
+2. `ls .cadence/research/ 2>/dev/null`，文件名匹配的视为已覆盖、不再调研；若该主题的事实要写进设计段，定点 Read 这一份再 inline。
+3. 剩余候选判断**会否阻塞下游**：现在不查，下游做计划或写代码时会因信息缺口卡住吗？外部服务/SDK 的接口路径/鉴权/请求响应结构/错误码/限流/模型 ID、版本敏感的 breaking change、协议/合规字段约束、影响代码结构的选型、有非通用细节的算法——任一命中即触发。常识补充、用户已说清、通用编程模式不触发。
+4. 触发 → AskUserQuestion 问「调研」还是「跳过」。用户同意：
+
+```bash
+mkdir -p .cadence/research
 ```
+```
+Agent(subagent_type="cadence:research-agent", description="调研 <topic>",
+      prompt="[topic] <一句话主题>\n[output_dir] .cadence/research\n按 research-agent 系统约定产出调研笔记，落到 output_dir 下。")
+```
+
+完成后 Read 产物作后续上下文；失败则告知"调研未成功，跳过"继续。
+
+# 异常
+
+- 不像开发任务（闲聊/求助）→ 说明 may 用途，不强行进流程。
+- 中途说"算了" → 不写文件，礼貌退出，源 pai 不动。
+- 参数缺失 → 见阶段 0。Bash/Write 失败 → 报错不重试。

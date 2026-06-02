@@ -26,6 +26,22 @@ require_file() {
   fi
 }
 
+require_mirror() {
+  local source_path="$1"
+  local mirror_path="$2"
+
+  require_file "$source_path"
+  require_file "$mirror_path"
+
+  if [[ -f "$REPO_ROOT/$source_path" && -f "$REPO_ROOT/$mirror_path" ]]; then
+    if cmp -s "$REPO_ROOT/$source_path" "$REPO_ROOT/$mirror_path"; then
+      pass "$mirror_path mirrors $source_path"
+    else
+      fail "$mirror_path differs from $source_path"
+    fi
+  fi
+}
+
 command -v jq >/dev/null || {
   echo "FAIL: jq not found"
   exit 1
@@ -119,14 +135,22 @@ command_reference_pairs=(
 for pair in "${command_reference_pairs[@]}"; do
   command_path="${pair%%|*}"
   reference_path="${pair#*|}"
-  require_file "$command_path"
-  require_file "$reference_path"
+  require_mirror "$command_path" "$reference_path"
 done
 
-require_file "agents/plan-agent.md"
-require_file "skills/cadence/references/plan-phases.md"
-require_file "agents/code-executor.md"
-require_file "skills/cadence/references/implement-phase.md"
+agent_reference_pairs=(
+  "agents/code-reviewer.md|skills/cadence/references/code-review.md"
+  "agents/research-agent.md|skills/cadence/references/research.md"
+  "agents/md-to-html.md|skills/cadence/references/md-to-html.md"
+  "agents/plan-agent.md|skills/cadence/references/plan-phases.md"
+  "agents/code-executor.md|skills/cadence/references/implement-phase.md"
+)
+
+for pair in "${agent_reference_pairs[@]}"; do
+  agent_path="${pair%%|*}"
+  reference_path="${pair#*|}"
+  require_mirror "$agent_path" "$reference_path"
+done
 
 if [[ "$failures" -gt 0 ]]; then
   echo
