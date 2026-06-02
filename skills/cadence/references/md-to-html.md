@@ -11,7 +11,7 @@ Render one Markdown document into a standalone HTML file using the plugin assets
 - `assets/html-design/components.md`
 - `assets/html-design/composition.md`
 
-Resolve those paths relative to the Cadence plugin root. If the installed skill path is available, the plugin root is two directories above this `SKILL.md`.
+Resolve those paths relative to the Cadence plugin root. From the active `cadence` skill, the plugin root is two directories above `skills/cadence/SKILL.md`.
 
 ## Workflow
 

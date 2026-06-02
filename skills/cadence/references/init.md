@@ -5,7 +5,7 @@ description: 初始化 Codex 项目的 Cadence 工作流规则。Use when the us
 
 # Cadence Init
 
-Run the Codex initializer from the Cadence plugin repository. Resolve the plugin root relative to this `SKILL.md`: the plugin root is two directories above `skills/cadence-init/SKILL.md`.
+Run the Codex initializer from the Cadence plugin repository. Resolve the plugin root from the active `cadence` skill: the plugin root is two directories above `skills/cadence/SKILL.md`.
 
 ```bash
 bash <cadence-plugin-root>/scripts/init-cadence-codex.sh

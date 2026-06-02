@@ -38,7 +38,7 @@ cadence:init               幂等注入项目根规则块 + .gitignore
 
 ### Codex
 
-Codex 版不使用 Claude 的 slash command / 子 agent 注册机制，而是把用户可触发的能力暴露为 skills。`plan-agent` 与 `code-executor` 是 `cadence:run` 的内部执行说明，不作为独立 Codex skill 暴露。安装后在 Codex 里用自然语言触发即可，例如：
+Codex 版不使用 Claude 的 slash command / 子 agent 注册机制，而是把 Cadence 工作流收敛到一个 `cadence` skill。这个 skill 内部按 `cadence:init`、`cadence:pai`、`cadence:may`、`cadence:run` 等请求读取对应 reference 执行；`plan-agent` 与 `code-executor` 是 `cadence:run` 的内部执行说明，不作为独立 Codex skill 暴露。`tdd` 与 `onboarding` 仍作为通用 Codex skills 暴露。安装后在 Codex 里用自然语言触发即可，例如：
 
 ```
 用 cadence:init 初始化当前项目
@@ -76,20 +76,24 @@ codex plugin add cadence@cadence
 
 安装后在你的项目里先跑一次 `/cadence:init`，把 cadence 的规则块写进项目根 `CLAUDE.md`（幂等，可重复执行）。
 
-## Codex Skills
+## Codex Skill
 
-| Skill | 作用 | 输入 | 产物 |
+Codex manifest 指向标准 skills 根目录 `./skills/`。其中 Cadence 工作流入口只有 `skills/cadence/SKILL.md`，所有 `cadence:*` 请求都由这个 skill 路由：
+
+| 请求 | 作用 | 输入 | 产物 |
 |---|---|---|---|
-| `cadence-init` | 注入项目 `AGENTS.md` 规则块与 `.gitignore` | 无 | 项目根 `AGENTS.md` |
-| `cadence-pai` | 需求拷打，连环追问划清需求 / 功能边界 | 对话 | `pai-<主题>.md` |
-| `cadence-pai-review` | 需求复审，挑缺口补齐后就地改文档 | `pai-*.md` 路径或目录 | 就地修订 |
-| `cadence-may` | 技术设计，不重做需求，只定实现方案 | `pai-*.md` 路径 | `may-<主题>.md` |
-| `cadence-run` | 串起拆 phase 与逐 phase 实现 | `may-*.md` 路径 | `phaseN.md` + 代码 |
-| `cadence-research` | 外部库 / API / 标准 / 法规调研 | topic + output dir | `.cadence/research/*.md` |
-| `cadence-code-review` | 高置信度 code review | diff 范围 | 中文 review |
-| `cadence-md-to-html` | Markdown 渲染为设计系统 HTML | md 路径 + 输出路径 | 单文件 HTML |
+| `cadence:init` | 注入项目 `AGENTS.md` 规则块与 `.gitignore` | 无 | 项目根 `AGENTS.md` |
+| `cadence:pai` | 需求拷打，连环追问划清需求 / 功能边界 | 对话 | `pai-<主题>.md` |
+| `cadence:pai-with-md` | 需求复审，挑缺口后就地改文档 | `pai-*.md` 路径或目录 | 就地修订 |
+| `cadence:may` | 技术设计，不重做需求，只定实现方案 | `pai-*.md` 路径 | `may-<主题>.md` |
+| `cadence:run` | 串起拆 phase 与逐 phase 实现 | `may-*.md` 路径 | `phaseN.md` + 代码 |
+| `cadence research` | 外部库 / API / 标准 / 法规调研 | topic + output dir | `.cadence/research/*.md` |
+| `cadence code review` | 高置信度 code review | diff 范围 | 中文 review |
+| `cadence md-to-html` | Markdown 渲染为设计系统 HTML | md 路径 + 输出路径 | 单文件 HTML |
 
-`cadence-run` 内部读取 `skills/cadence-run/references/plan-phases.md` 与 `skills/cadence-run/references/implement-phase.md`，对应 Claude 侧的 `plan-agent` 和 `code-executor`。
+内部 references 位于 `skills/cadence/references/`。其中 `plan-phases.md` 与 `implement-phase.md` 对应 Claude 侧的 `plan-agent` 和 `code-executor`。
+
+另外，`skills/tdd/` 与 `skills/onboarding/` 作为独立通用 skills 保留。
 
 ## Claude Commands
 

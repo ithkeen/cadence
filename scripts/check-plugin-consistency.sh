@@ -65,7 +65,32 @@ else
 fi
 
 skills_path="$(jq -r '.skills' "$REPO_ROOT/.codex-plugin/plugin.json")"
-[[ -d "$REPO_ROOT/$skills_path" ]] && pass "Codex skills path exists" || fail "Codex skills path missing: $skills_path"
+if [[ "$skills_path" == "./skills/" && -d "$REPO_ROOT/skills" ]]; then
+  pass "Codex skills root is ./skills/"
+else
+  fail "Codex skills root should be ./skills/, got: $skills_path"
+fi
+
+if find "$REPO_ROOT/skills" -maxdepth 1 -type d -name 'cadence-*' | grep -q .; then
+  fail "removed per-command Codex skills still exist under skills/cadence-*"
+else
+  pass "no per-command Codex skill directories"
+fi
+
+expected_skills="cadence onboarding tdd"
+actual_skills="$(
+  find "$REPO_ROOT/skills" -maxdepth 2 -name SKILL.md -print |
+    sed "s#^$REPO_ROOT/skills/##; s#/SKILL.md##" |
+    grep -v / |
+    sort |
+    tr '\n' ' ' |
+    sed 's/ $//'
+)"
+if [[ "$actual_skills" == "$expected_skills" ]]; then
+  pass "Codex exposes expected top-level skills: $expected_skills"
+else
+  fail "unexpected top-level Codex skills: $actual_skills"
+fi
 
 for asset in \
   "$(jq -r '.interface.composerIcon // empty' "$REPO_ROOT/.codex-plugin/plugin.json")" \
@@ -83,25 +108,25 @@ for script in scripts/init-cadence.sh scripts/init-cadence-codex.sh; do
   fi
 done
 
-command_skill_pairs=(
-  "commands/init.md|skills/cadence-init/SKILL.md"
-  "commands/pai.md|skills/cadence-pai/SKILL.md"
-  "commands/pai-with-md.md|skills/cadence-pai-review/SKILL.md"
-  "commands/may.md|skills/cadence-may/SKILL.md"
-  "commands/run.md|skills/cadence-run/SKILL.md"
+command_reference_pairs=(
+  "commands/init.md|skills/cadence/references/init.md"
+  "commands/pai.md|skills/cadence/references/pai.md"
+  "commands/pai-with-md.md|skills/cadence/references/pai-review.md"
+  "commands/may.md|skills/cadence/references/may.md"
+  "commands/run.md|skills/cadence/references/run.md"
 )
 
-for pair in "${command_skill_pairs[@]}"; do
+for pair in "${command_reference_pairs[@]}"; do
   command_path="${pair%%|*}"
-  skill_path="${pair#*|}"
+  reference_path="${pair#*|}"
   require_file "$command_path"
-  require_file "$skill_path"
+  require_file "$reference_path"
 done
 
 require_file "agents/plan-agent.md"
-require_file "skills/cadence-run/references/plan-phases.md"
+require_file "skills/cadence/references/plan-phases.md"
 require_file "agents/code-executor.md"
-require_file "skills/cadence-run/references/implement-phase.md"
+require_file "skills/cadence/references/implement-phase.md"
 
 if [[ "$failures" -gt 0 ]]; then
   echo
