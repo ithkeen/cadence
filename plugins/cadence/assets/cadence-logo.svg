@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 96" role="img" aria-label="Cadence logo">
+  <rect width="96" height="96" rx="20" fill="#2563EB"/>
+  <path d="M27 48c0-14.2 10.1-24 24.5-24 8.6 0 15.8 3.5 20.2 9.7l-9 6.6c-2.6-3.5-6-5.3-10.4-5.3-7.8 0-13.1 5.6-13.1 13s5.3 13 13.1 13c4.4 0 7.8-1.8 10.4-5.4l9 6.6c-4.4 6.3-11.6 9.8-20.2 9.8C37.1 72 27 62.2 27 48z" fill="#FFFFFF"/>
+  <path d="M20 27h10v9H20v-9zm66 33h10v9H86v-9z" fill="#93C5FD"/>
+  <text x="122" y="58" fill="#111827" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="34" font-weight="700">Cadence</text>
+</svg>
