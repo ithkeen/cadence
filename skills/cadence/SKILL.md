@@ -16,12 +16,33 @@ description: "用户输入包含 cadence:init、cadence:pai、cadence:pai-with-m
 - `pai`：按 `references/pai.md` 处理。
 - `may`：按 `references/may.md` 处理。
 - `run`：按 `references/run.md` 处理。
-- `research`：派发子 agent，使用 `../../assets/codex-agents/research-agent.toml` 作为指引。
-- `code-review`：派发子 agent，使用 `../../assets/codex-agents/code-reviewer.toml` 作为指引。
-- `md-to-html`：派发子 agent，使用 `../../assets/codex-agents/md-to-html.toml` 作为指引。
+- `research`：直接调用 `research-agent` 子 agent。
+- `code-review`：直接调用 `code-reviewer` 子 agent。
+- `md-to-html`：直接调用 `md-to-html` 子 agent。
 
 ## 执行
 
-- 只读取命中的 reference 或 agent TOML；文件明确要求继续读取其他文件时再读。
-- 子 agent prompt 必须包含对应 agent TOML 的完整指引和用户任务。
+- 只读取命中的 reference；文件明确要求继续读取其他文件时再读。
+- 需要调用子 agent 的动作，直接按名称调用已安装到用户空间的 agent。
+- 子 agent 没有命令参数或 argv；输入通过发给子 agent 的任务 prompt 传递。prompt 用稳定字段块表达，例如 `[topic] ...`、`[output_dir] ...`，缺必填字段时先问用户补齐。
 - 未命中动作时，只列出支持动作。
+
+## 子 agent 输入
+
+- `research-agent`：
+  ```text
+  [topic] <调研主题>
+  [output_dir] .cadence/research
+  [depth] <L1|L2|L3，可选>
+  ```
+- `code-reviewer`：
+  ```text
+  [diff_command] <git diff 命令；用户未指定时可省略，让 agent 按自身兜底规则处理>
+  [review_focus] <用户特别要求关注的点，可选>
+  ```
+- `md-to-html`：
+  ```text
+  [input_md] <要渲染的 markdown 路径>
+  [output_html] <输出 HTML 路径>
+  [title] <标题，可选>
+  ```

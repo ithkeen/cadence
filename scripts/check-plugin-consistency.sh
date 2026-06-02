@@ -42,6 +42,30 @@ require_mirror() {
   fi
 }
 
+require_codex_reference() {
+  local action="$1"
+  local command_path="$2"
+  local reference_path="$3"
+  local reference_file="$REPO_ROOT/$reference_path"
+
+  require_file "$command_path"
+  require_file "$reference_path"
+
+  if [[ -f "$reference_file" ]]; then
+    if grep -q "# cadence:$action" "$reference_file"; then
+      pass "$reference_path declares cadence:$action"
+    else
+      fail "$reference_path should declare # cadence:$action"
+    fi
+
+    if grep -Eq '\$ARGUMENTS|allowed-tools:|argument-hint:|AskUserQuestion|Agent\(subagent_type=|Read |Write |Bash|Edit|用法：/cadence:' "$reference_file"; then
+      fail "$reference_path contains Claude-only command/tool syntax"
+    else
+      pass "$reference_path removes Claude-only command/tool syntax"
+    fi
+  fi
+}
+
 command -v jq >/dev/null || {
   echo "FAIL: jq not found"
   exit 1
@@ -133,16 +157,18 @@ else
   fail "scripts/install-codex-agents.sh should install assets/codex-agents into CODEX_HOME agents"
 fi
 
-command_reference_pairs=(
-  "commands/pai-with-md.md|skills/cadence/references/pai-review.md"
-  "commands/may.md|skills/cadence/references/may.md"
-  "commands/run.md|skills/cadence/references/run.md"
+codex_reference_pairs=(
+  "pai-with-md|commands/pai-with-md.md|skills/cadence/references/pai-with-md.md"
+  "may|commands/may.md|skills/cadence/references/may.md"
+  "run|commands/run.md|skills/cadence/references/run.md"
 )
 
-for pair in "${command_reference_pairs[@]}"; do
-  command_path="${pair%%|*}"
-  reference_path="${pair#*|}"
-  require_mirror "$command_path" "$reference_path"
+for pair in "${codex_reference_pairs[@]}"; do
+  action="${pair%%|*}"
+  rest="${pair#*|}"
+  command_path="${rest%%|*}"
+  reference_path="${rest#*|}"
+  require_codex_reference "$action" "$command_path" "$reference_path"
 done
 
 require_file "commands/init.md"
@@ -162,6 +188,16 @@ if grep -q 'allowed-tools:' "$REPO_ROOT/commands/pai.md" &&
   pass "Codex pai reference removes Claude-only tool declarations"
 else
   fail "Codex pai reference should not contain Claude-only tool declarations"
+fi
+
+require_file "skills/cadence/SKILL.md"
+if grep -q '直接调用 `research-agent`' "$REPO_ROOT/skills/cadence/SKILL.md" &&
+   grep -q '直接调用 `code-reviewer`' "$REPO_ROOT/skills/cadence/SKILL.md" &&
+   grep -q '直接调用 `md-to-html`' "$REPO_ROOT/skills/cadence/SKILL.md" &&
+   ! grep -q '完整指引\|agent TOML\|作为指引' "$REPO_ROOT/skills/cadence/SKILL.md"; then
+  pass "Codex cadence skill routes installed agents by name"
+else
+  fail "Codex cadence skill should route installed agents by name without TOML prompt instructions"
 fi
 
 codex_agent_assets=(
