@@ -125,8 +125,6 @@ for script in scripts/init-cadence.sh scripts/init-cadence-codex.sh; do
 done
 
 command_reference_pairs=(
-  "commands/init.md|skills/cadence/references/init.md"
-  "commands/pai.md|skills/cadence/references/pai.md"
   "commands/pai-with-md.md|skills/cadence/references/pai-review.md"
   "commands/may.md|skills/cadence/references/may.md"
   "commands/run.md|skills/cadence/references/run.md"
@@ -138,18 +136,41 @@ for pair in "${command_reference_pairs[@]}"; do
   require_mirror "$command_path" "$reference_path"
 done
 
-agent_reference_pairs=(
-  "agents/code-reviewer.md|skills/cadence/references/code-review.md"
-  "agents/research-agent.md|skills/cadence/references/research.md"
-  "agents/md-to-html.md|skills/cadence/references/md-to-html.md"
-  "agents/plan-agent.md|skills/cadence/references/plan-phases.md"
-  "agents/code-executor.md|skills/cadence/references/implement-phase.md"
+require_file "commands/init.md"
+require_file "skills/cadence/references/init.md"
+if grep -q 'init-cadence.sh' "$REPO_ROOT/commands/init.md" &&
+   grep -q 'init-cadence-codex.sh' "$REPO_ROOT/skills/cadence/references/init.md"; then
+  pass "Claude/Codex init entries use harness-specific scripts"
+else
+  fail "init entries should use harness-specific scripts"
+fi
+
+require_file "commands/pai.md"
+require_file "skills/cadence/references/pai.md"
+if grep -q 'allowed-tools:' "$REPO_ROOT/commands/pai.md" &&
+   ! grep -q 'allowed-tools:\|AskUserQuestion\|Agent(subagent_type=' "$REPO_ROOT/skills/cadence/references/pai.md"; then
+  pass "Codex pai reference removes Claude-only tool declarations"
+else
+  fail "Codex pai reference should not contain Claude-only tool declarations"
+fi
+
+codex_agent_assets=(
+  "assets/codex-agents/code-reviewer.toml|name = \"code-reviewer\""
+  "assets/codex-agents/research-agent.toml|name = \"research-agent\""
+  "assets/codex-agents/md-to-html.toml|name = \"md-to-html\""
+  "assets/codex-agents/plan-agent.toml|name = \"plan-agent\""
+  "assets/codex-agents/code-executor.toml|name = \"code-executor\""
 )
 
-for pair in "${agent_reference_pairs[@]}"; do
-  agent_path="${pair%%|*}"
-  reference_path="${pair#*|}"
-  require_mirror "$agent_path" "$reference_path"
+for pair in "${codex_agent_assets[@]}"; do
+  asset_path="${pair%%|*}"
+  expected_name="${pair#*|}"
+  require_file "$asset_path"
+  if [[ -f "$REPO_ROOT/$asset_path" ]] && grep -q "$expected_name" "$REPO_ROOT/$asset_path"; then
+    pass "$asset_path declares $expected_name"
+  else
+    fail "$asset_path should declare $expected_name"
+  fi
 done
 
 if [[ "$failures" -gt 0 ]]; then
