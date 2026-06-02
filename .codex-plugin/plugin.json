@@ -1,6 +1,6 @@
 {
   "name": "cadence",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "显式触发、中文输出的 Codex 开发工作流：init → pai → may → run。",
   "author": {
     "name": "ithkeen",
