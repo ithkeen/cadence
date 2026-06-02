@@ -1,6 +1,6 @@
 ---
 name: plan-agent
-description: 读取 may 产出的设计文档（may-<主题>.md），按功能域切成若干 phase 任务文件（phase1.md、phase2.md…），每个 phase 交给 code-executor 直接执行。给定 may 文档路径与输出目录时使用本 agent；它只拆 phase，不写代码、不调度 executor、不读项目源码、不改 may。Use when given a may-<主题>.md path and an output directory.
+description: 读取 may 产出的设计文档（may-<主题>.md），按功能域切成若干 phase 任务文件（phase1.md、phase2.md…），每个 phase 都必须自包含，能被 code-executor 直接执行。给定 may 文档路径与输出目录时使用本 agent；它只拆 phase，不写代码、不调度 executor、不读项目源码、不改 may。Use when given a may-<主题>.md path and an output directory.
 model: opus
 tools: Read, Write, Bash
 ---

@@ -6,7 +6,7 @@ developer_instructions = '''
 - 严格遵循输入任务的全部要求与补充文件中的约束
 - 禁止擅自完成输入任务外的任何功能、优化和修复等
 - 必须用 `tdd` skill 驱动开发
-- 不常用第三方库 / 框架 API 必须使用 context7 查文档（`mcp__context7__resolve-library-id` → `mcp__context7__query-docs`）
+- 不常用第三方库 / 框架 API 必须查官方文档；若 Context7 可用，先解析库 ID 再查询文档；不可用时使用当前会话可用的官方文档 / 网页读取能力，不编造 API 行为
 
 ## 输出
 

@@ -66,6 +66,21 @@ require_codex_reference() {
   fi
 }
 
+require_codex_agent_portable() {
+  local asset_path="$1"
+  local agent_file="$REPO_ROOT/$asset_path"
+
+  require_file "$asset_path"
+
+  if [[ -f "$agent_file" ]]; then
+    if grep -Eq 'CLAUDE_PLUGIN_ROOT|WebSearch|WebFetch|AskUserQuestion|Agent\(subagent_type=|allowed-tools:|argument-hint:|(^|[^[:alnum:]_])(Read|Write|Bash|Edit|Grep|Glob)([^[:alnum:]_]|$)|CLAUDE\.md|mcp__context7__' "$agent_file"; then
+      fail "$asset_path contains Claude-only command/tool syntax"
+    else
+      pass "$asset_path removes Claude-only command/tool syntax"
+    fi
+  fi
+}
+
 command -v jq >/dev/null || {
   echo "FAIL: jq not found"
   exit 1
@@ -151,10 +166,11 @@ done
 require_file "scripts/install-codex-agents.sh"
 if grep -q 'assets/codex-agents' "$REPO_ROOT/scripts/install-codex-agents.sh" &&
    grep -q 'CODEX_HOME' "$REPO_ROOT/scripts/install-codex-agents.sh" &&
-   grep -q '.codex' "$REPO_ROOT/scripts/install-codex-agents.sh"; then
+   grep -q '.codex' "$REPO_ROOT/scripts/install-codex-agents.sh" &&
+   grep -q '__CADENCE_PLUGIN_ROOT__' "$REPO_ROOT/scripts/install-codex-agents.sh"; then
   pass "scripts/install-codex-agents.sh installs bundled Codex agents"
 else
-  fail "scripts/install-codex-agents.sh should install assets/codex-agents into CODEX_HOME agents"
+  fail "scripts/install-codex-agents.sh should install assets/codex-agents into CODEX_HOME agents and template plugin-root placeholders"
 fi
 
 codex_reference_pairs=(
@@ -217,7 +233,21 @@ for pair in "${codex_agent_assets[@]}"; do
   else
     fail "$asset_path should declare $expected_name"
   fi
+
+  require_codex_agent_portable "$asset_path"
 done
+
+if grep -q '__CADENCE_PLUGIN_ROOT__' "$REPO_ROOT/assets/codex-agents/md-to-html.toml"; then
+  pass "assets/codex-agents/md-to-html.toml keeps install-time plugin-root placeholder"
+else
+  fail "assets/codex-agents/md-to-html.toml should keep __CADENCE_PLUGIN_ROOT__ for install-time templating"
+fi
+
+if grep -q 'design_assets_root' "$REPO_ROOT/assets/codex-agents/md-to-html.toml"; then
+  fail "assets/codex-agents/md-to-html.toml should not expose design_assets_root override"
+else
+  pass "assets/codex-agents/md-to-html.toml uses bundled design assets only"
+fi
 
 if [[ "$failures" -gt 0 ]]; then
   echo

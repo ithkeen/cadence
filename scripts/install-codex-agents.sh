@@ -8,6 +8,7 @@ PLUGIN_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 SOURCE_DIR="$PLUGIN_ROOT/assets/codex-agents"
 CODEX_STATE_DIR="${CODEX_HOME:-$HOME/.codex}"
 TARGET_DIR="$CODEX_STATE_DIR/agents"
+ESCAPED_PLUGIN_ROOT="$(printf '%s' "$PLUGIN_ROOT" | sed 's/[\\&|]/\\&/g')"
 
 if [ ! -d "$SOURCE_DIR" ]; then
   echo "安装失败：找不到 Codex agent 目录 $SOURCE_DIR" >&2
@@ -23,7 +24,13 @@ for agent in "$SOURCE_DIR"/*.toml; do
     exit 1
   fi
 
-  cp "$agent" "$TARGET_DIR/"
+  target_agent="$TARGET_DIR/$(basename "$agent")"
+  if [ "$(basename "$agent")" = "md-to-html.toml" ]; then
+    sed "s|__CADENCE_PLUGIN_ROOT__|$ESCAPED_PLUGIN_ROOT|g" "$agent" > "$target_agent"
+  else
+    cp "$agent" "$target_agent"
+  fi
+
   echo "已安装 $(basename "$agent") 到 $TARGET_DIR"
   copied=$((copied + 1))
 done
