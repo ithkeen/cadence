@@ -8,53 +8,21 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PLUGIN_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+RULES_FILE="$PLUGIN_ROOT/rules/project-rules.md"
 TARGET_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
 CLAUDE_MD="${TARGET_DIR%/}/CLAUDE.md"
 GITIGNORE="${TARGET_DIR%/}/.gitignore"
 MARKER_START="<!-- cadence:rules:start -->"
 GITIGNORE_ENTRIES=(".idea/" ".cadence/" ".playwright-mcp/")
 
-RULES_BLOCK=$(cat <<'EOF'
-<!-- cadence:rules:start -->
-# 必须遵循以下要求
+if [ ! -f "$RULES_FILE" ]; then
+  echo "初始化失败：找不到规则文件 $RULES_FILE" >&2
+  exit 1
+fi
 
-## 1. 禁止修改当前工作目录（打开会话的目录）外的文件。除非获取用户的同意。
-## 2. 新增接口和函数代码时，要加详细的注释，注释表达做到开源项目级别。
-
-# 行为准则
-
-## 1. 简洁优先
-
-**用解决问题所需的最少代码。不写任何投机性的东西。**
-
-- 不要添加任何超出要求之外的功能。
-- 不要为只用一次的代码做抽象。
-- 不要加入未被要求的"灵活性"或"可配置性"。
-- 不要为不可能发生的场景编写错误处理。
-- 如果你写了 200 行而其实 50 行就够，就重写。
-
-问自己：「资深工程师会不会觉得这太复杂了？」如果会，就简化。
-
-## 2. 精准外科式修改
-
-**只动你必须动的地方。只清理你自己留下的烂摊子。**
-
-在修改现有代码时：
-
-- 不要"顺手优化"相邻的代码、注释或格式。
-- 不要重构没有坏掉的东西。
-- 与现有风格保持一致，即便你自己的写法会不同。
-- 如果你注意到无关的死代码，提一下——不要删除它。
-
-当你的改动产生了"孤儿"时：
-
-- 移除因**你的**改动而变得未被使用的 import、变量、函数。
-- 不要移除既有的死代码，除非被要求这样做。
-
-检验标准：每一行被改动的代码都应能直接追溯到用户的请求。
-<!-- cadence:rules:end -->
-EOF
-)
+RULES_BLOCK="$(cat "$RULES_FILE")"
 
 # --- CLAUDE.md ---
 if [ ! -f "$CLAUDE_MD" ]; then

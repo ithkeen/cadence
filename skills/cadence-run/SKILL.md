@@ -7,6 +7,13 @@ description: Cadence 实施编排工作流，读取 may 设计文档，生成 ph
 
 Turn one `may-*.md` design document into code.
 
+Use the internal references in this skill directory:
+
+- `references/plan-phases.md`
+- `references/implement-phase.md`
+
+These references replace Claude Code's `plan-agent` and `code-executor` delegation in Codex.
+
 ## Locate Input
 
 The user must provide a may document path.
@@ -17,10 +24,10 @@ The user must provide a may document path.
 
 ## Flow
 
-1. Use `cadence-plan-phases` to generate `phaseN.md` files in `output_dir`.
+1. Read `references/plan-phases.md`, then generate `phaseN.md` files in `output_dir`.
 2. If planning fails or bails, relay the reason and stop.
 3. Read the generated phase list.
-4. Implement phases serially in dependency order using `cadence-implement-phase`.
+4. Read `references/implement-phase.md`, then implement phases serially in dependency order.
 5. Do not parallelize phase implementation. Later phases share the same worktree and may depend on earlier changes.
 6. If a phase fails, stop and do not run dependent later phases.
 

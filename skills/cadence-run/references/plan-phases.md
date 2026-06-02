@@ -1,11 +1,7 @@
----
-name: cadence-plan-phases
-description: 将 Cadence may 设计文档按功能域拆成 phase1.md、phase2.md 等自包含实施任务。Use when the user asks to split a may-*.md into phases, cadence plan phases, or when cadence-run needs phase files before implementation.
----
-
-# Cadence Plan Phases
+# Cadence Plan Phases Reference
 
 Read one `may-*.md` file and write self-contained `phaseN.md` files in the same output directory.
+This is an internal reference for `cadence-run`, not a standalone user-facing Codex skill.
 
 ## Input
 

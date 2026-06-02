@@ -8,36 +8,21 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PLUGIN_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+RULES_FILE="$PLUGIN_ROOT/rules/project-rules.md"
 TARGET_DIR="${CODEX_PROJECT_DIR:-$PWD}"
 AGENTS_MD="${TARGET_DIR%/}/AGENTS.md"
 GITIGNORE="${TARGET_DIR%/}/.gitignore"
 MARKER_START="<!-- cadence:rules:start -->"
 GITIGNORE_ENTRIES=(".idea/" ".cadence/" ".playwright-mcp/")
 
-RULES_BLOCK=$(cat <<'EOF'
-<!-- cadence:rules:start -->
-# Cadence 项目规则
+if [ ! -f "$RULES_FILE" ]; then
+  echo "初始化失败：找不到规则文件 $RULES_FILE" >&2
+  exit 1
+fi
 
-## 1. 工作目录边界
-
-禁止修改当前工作目录（打开会话的目录）外的文件，除非获得用户明确同意。
-
-## 2. 注释要求
-
-新增接口和函数代码时，要加清晰注释；注释应解释对外契约、边界和非显然决策，不写空泛复述。
-
-## 3. 简洁优先
-
-用解决问题所需的最少代码。不添加超出要求之外的功能，不为只用一次的代码做抽象，不加入未被要求的灵活性或可配置性。
-
-## 4. 精准外科式修改
-
-只动必须动的地方。不要顺手优化相邻代码、注释或格式；不要重构没有坏掉的东西；与既有风格保持一致。移除因本次改动产生的未使用 import、变量、函数，但不要删除无关既有死代码，除非用户要求。
-
-检验标准：每一行被改动的代码都应能直接追溯到用户请求。
-<!-- cadence:rules:end -->
-EOF
-)
+RULES_BLOCK="$(cat "$RULES_FILE")"
 
 if [ ! -f "$AGENTS_MD" ]; then
   printf '%s\n' "$RULES_BLOCK" > "$AGENTS_MD"

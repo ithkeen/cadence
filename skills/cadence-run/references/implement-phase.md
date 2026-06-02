@@ -1,11 +1,7 @@
----
-name: cadence-implement-phase
-description: 执行单个 Cadence phase 文档，按 TDD 红绿重构落地代码并运行 phase 内验证命令。Use when given a phaseN.md implementation task, when cadence-run is implementing phases, or when the user asks to execute a Cadence phase with TDD.
----
+# Cadence Implement Phase Reference
 
-# Cadence Implement Phase
-
-Implement exactly one `phaseN.md` task using the `tdd` skill.
+Implement exactly one `phaseN.md` task using the `tdd` skill. This is an internal reference for
+`cadence-run`, not a standalone user-facing Codex skill.
 
 ## Hard Rules
 

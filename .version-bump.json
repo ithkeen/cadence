@@ -1,0 +1,17 @@
+{
+  "files": [
+    { "path": ".claude-plugin/plugin.json", "field": "version" },
+    { "path": ".codex-plugin/plugin.json", "field": "version" },
+    { "path": ".claude-plugin/marketplace.json", "field": "plugins.0.version" }
+  ],
+  "audit": {
+    "exclude": [
+      ".git",
+      ".idea",
+      ".venv",
+      ".playwright-mcp",
+      ".version-bump.json",
+      "scripts/bump-version.sh"
+    ]
+  }
+}

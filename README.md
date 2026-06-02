@@ -38,7 +38,7 @@ cadence:init               幂等注入项目根规则块 + .gitignore
 
 ### Codex
 
-Codex 版不使用 Claude 的 slash command 注册机制，而是把各阶段暴露为 skills。安装后在 Codex 里用自然语言触发即可，例如：
+Codex 版不使用 Claude 的 slash command / 子 agent 注册机制，而是把用户可触发的能力暴露为 skills。`plan-agent` 与 `code-executor` 是 `cadence:run` 的内部执行说明，不作为独立 Codex skill 暴露。安装后在 Codex 里用自然语言触发即可，例如：
 
 ```
 用 cadence:init 初始化当前项目
@@ -61,6 +61,8 @@ codex plugin marketplace add /path/to/cadence
 codex plugin add cadence@cadence
 ```
 
+当前仓库根目录就是 Codex 插件根目录；`.agents/plugins/marketplace.json` 的本地 source 指向 `./`，不会再额外包一层 `plugins/cadence/`。
+
 安装后在新 Codex 会话里使用。先跑一次 `cadence:init`，它会把规则块写进项目根 `AGENTS.md`（幂等，可重复执行）。
 
 ### Claude Code
@@ -82,12 +84,12 @@ codex plugin add cadence@cadence
 | `cadence-pai` | 需求拷打，连环追问划清需求 / 功能边界 | 对话 | `pai-<主题>.md` |
 | `cadence-pai-review` | 需求复审，挑缺口补齐后就地改文档 | `pai-*.md` 路径或目录 | 就地修订 |
 | `cadence-may` | 技术设计，不重做需求，只定实现方案 | `pai-*.md` 路径 | `may-<主题>.md` |
-| `cadence-plan-phases` | 把 may 按功能域拆成 phase | `may-*.md` 路径 | `phaseN.md` |
-| `cadence-implement-phase` | 单个 phase 的 TDD 实现 | `phaseN.md` 路径 | 代码 |
 | `cadence-run` | 串起拆 phase 与逐 phase 实现 | `may-*.md` 路径 | `phaseN.md` + 代码 |
 | `cadence-research` | 外部库 / API / 标准 / 法规调研 | topic + output dir | `.cadence/research/*.md` |
 | `cadence-code-review` | 高置信度 code review | diff 范围 | 中文 review |
 | `cadence-md-to-html` | Markdown 渲染为设计系统 HTML | md 路径 + 输出路径 | 单文件 HTML |
+
+`cadence-run` 内部读取 `skills/cadence-run/references/plan-phases.md` 与 `skills/cadence-run/references/implement-phase.md`，对应 Claude 侧的 `plan-agent` 和 `code-executor`。
 
 ## Claude Commands
 
@@ -119,6 +121,19 @@ codex plugin add cadence@cadence
 - **全程中文**：所有命令与子 agent 产物均为中文。
 - **产物目录**：`.cadence/cycle-<主题>/`（cycle 产物）、`.cadence/research/`（调研笔记），均默认进 `.gitignore`。
 - **规则块**：`cadence:init` 注入的规则强调简洁优先、精准外科式修改，约束模型不越界改动。Claude 写入 `CLAUDE.md`，Codex 写入 `AGENTS.md`。
+
+## 维护
+
+```bash
+scripts/bump-version.sh --check
+scripts/check-plugin-consistency.sh
+```
+
+发版改版本号时用：
+
+```bash
+scripts/bump-version.sh <X.Y.Z>
+```
 
 ## License
 

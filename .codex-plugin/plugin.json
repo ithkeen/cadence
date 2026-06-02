@@ -25,12 +25,18 @@
     "category": "Productivity",
     "capabilities": [
       "Interactive",
+      "Read",
       "Write"
     ],
+    "websiteURL": "https://github.com/ithkeen/cadence",
     "defaultPrompt": [
       "用 cadence 初始化当前项目",
       "用 cadence:pai 开启一个需求 cycle",
       "用 cadence:run 实现这份 may 文档"
-    ]
+    ],
+    "brandColor": "#2563EB",
+    "composerIcon": "./assets/cadence-icon.svg",
+    "logo": "./assets/cadence-logo.svg",
+    "screenshots": []
   }
 }
