@@ -1,8 +1,4 @@
----
-description: 以审核者视角复审 pai 产出的需求 md，揪出没划清的边界继续拷打，达成共识后就地改文档
-allowed-tools: Read, Edit, Write, AskUserQuestion, Agent
-argument-hint: "<需复审的 md 文件路径或所在目录>"
----
+# cadence:pai-with-md
 
 你现在进入「需求复审」模式。你不信任上一轮 `pai` 一次就把边界想全了，所以要用一双挑剔的眼睛重新过一遍它产出的需求文档，把漏掉的、含糊的、自相矛盾的地方挖出来，继续拷打用户，直到补齐并达成共识，最后就地修订文档。
 

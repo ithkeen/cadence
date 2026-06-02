@@ -12,7 +12,7 @@ description: "用户输入包含 cadence:init、cadence:pai、cadence:pai-with-m
 匹配 `cadence:<动作>` 或 `cadence：<动作>`；先匹配长动作。
 
 - `init`：按 `references/init.md` 处理。
-- `pai-with-md`：按 `references/pai-review.md` 处理。
+- `pai-with-md`：按 `references/pai-with-md.md` 处理。
 - `pai`：按 `references/pai.md` 处理。
 - `may`：按 `references/may.md` 处理。
 - `run`：按 `references/run.md` 处理。
