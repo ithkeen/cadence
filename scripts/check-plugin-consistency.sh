@@ -124,6 +124,15 @@ for script in scripts/init-cadence.sh scripts/init-cadence-codex.sh; do
   fi
 done
 
+require_file "scripts/install-codex-agents.sh"
+if grep -q 'assets/codex-agents' "$REPO_ROOT/scripts/install-codex-agents.sh" &&
+   grep -q 'CODEX_HOME' "$REPO_ROOT/scripts/install-codex-agents.sh" &&
+   grep -q '.codex' "$REPO_ROOT/scripts/install-codex-agents.sh"; then
+  pass "scripts/install-codex-agents.sh installs bundled Codex agents"
+else
+  fail "scripts/install-codex-agents.sh should install assets/codex-agents into CODEX_HOME agents"
+fi
+
 command_reference_pairs=(
   "commands/pai-with-md.md|skills/cadence/references/pai-review.md"
   "commands/may.md|skills/cadence/references/may.md"
@@ -139,7 +148,8 @@ done
 require_file "commands/init.md"
 require_file "skills/cadence/references/init.md"
 if grep -q 'init-cadence.sh' "$REPO_ROOT/commands/init.md" &&
-   grep -q 'init-cadence-codex.sh' "$REPO_ROOT/skills/cadence/references/init.md"; then
+   grep -q 'init-cadence-codex.sh' "$REPO_ROOT/skills/cadence/references/init.md" &&
+   grep -q 'install-codex-agents.sh' "$REPO_ROOT/skills/cadence/references/init.md"; then
   pass "Claude/Codex init entries use harness-specific scripts"
 else
   fail "init entries should use harness-specific scripts"
