@@ -61,7 +61,7 @@ codex plugin marketplace add /path/to/cadence
 codex plugin add cadence@cadence
 ```
 
-当前仓库根目录就是 Codex 插件根目录；`.agents/plugins/marketplace.json` 的本地 source 指向 `./`，不会再额外包一层 `plugins/cadence/`。
+当前仓库根目录就是 Codex 插件根目录，Codex manifest 是 `.codex-plugin/plugin.json`；仓库内不维护 `.agents/` marketplace 包装，也不额外包一层 `plugins/cadence/`。
 
 安装后在新 Codex 会话里使用。先跑一次 `cadence:init`，它会把规则块写进项目根 `AGENTS.md`（幂等，可重复执行）。
 

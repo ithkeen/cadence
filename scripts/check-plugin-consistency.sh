@@ -34,8 +34,7 @@ command -v jq >/dev/null || {
 for file in \
   ".claude-plugin/plugin.json" \
   ".claude-plugin/marketplace.json" \
-  ".codex-plugin/plugin.json" \
-  ".agents/plugins/marketplace.json"; do
+  ".codex-plugin/plugin.json"; do
   require_file "$file"
   jq empty "$REPO_ROOT/$file" >/dev/null || fail "$file is invalid JSON"
 done
@@ -53,12 +52,16 @@ else
   fail "version drift: claude=$claude_version codex=$codex_version marketplace=$market_version"
 fi
 
-market_path="$(jq -r '.plugins[] | select(.name == "cadence") | .source.path' "$REPO_ROOT/.agents/plugins/marketplace.json")"
-[[ -n "$market_path" && "$market_path" != "null" ]] || fail "Codex marketplace source.path missing"
-if [[ -d "$REPO_ROOT/$market_path" && -f "$REPO_ROOT/$market_path/.codex-plugin/plugin.json" ]]; then
-  pass "Codex marketplace source.path points to a plugin root"
+if [[ -f "$REPO_ROOT/.codex-plugin/plugin.json" && -d "$REPO_ROOT/skills" ]]; then
+  pass "repository root is the Codex plugin root"
 else
-  fail "Codex marketplace source.path does not point to a plugin root: $market_path"
+  fail "repository root is missing Codex plugin files"
+fi
+
+if [[ -e "$REPO_ROOT/.agents" || -e "$REPO_ROOT/plugins/cadence" ]]; then
+  fail "redundant Codex marketplace wrapper exists: remove .agents/ and plugins/cadence/"
+else
+  pass "no redundant Codex marketplace wrapper"
 fi
 
 skills_path="$(jq -r '.skills' "$REPO_ROOT/.codex-plugin/plugin.json")"
