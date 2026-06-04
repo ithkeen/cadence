@@ -368,6 +368,8 @@
 - `<pre class="mermaid">` 里**不要**再嵌 `<code>`；模板末尾的渲染脚本只识别 `.mermaid` 节点，套了 `<code>` 不会触发
 - 图由浏览器 lazy 加载 mermaid@11 ESM 后渲染——离线 / 打印 / 截 PDF 会只剩源码。**重要的关键图请改用 §14 figure-tablet** 贴静态 SVG / PNG
 - `{{LABEL}}` 控制在 6 字以内
+- Mermaid 是摘要图，不是清单容器；单图控制在 10 个节点、12 条边以内。目录、接口、文件、依赖清单过长时，改用 §10 matrix、§7b tablet-row 或 §5 列表。
+- 新生成 Mermaid 时，节点 ID 只用短 ASCII 标识；包含 `/`、`:`、`()、{}`、`[]`、逗号、空格、代码片段或中文的展示文本放进双引号标签，例如 `api["api: HTTP handlers"]`。无法确信语法有效时，不用 Mermaid。
 
 ```html
 <figure class="mermaid-figure">
