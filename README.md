@@ -31,7 +31,7 @@ phase1.md ... phaseN.md + 代码
 
 | 路径 | 内容 |
 |---|---|
-| `.cadence/cycle-<主题>/pai-<主题>.md` | 需求边界与验收标准 |
+| `.cadence/cycle-<主题>/pai-<主题>.md` | 按 REQ/AC 组织的需求规格 |
 | `.cadence/cycle-<主题>/may-<主题>.md` | 技术设计 |
 | `.cadence/cycle-<主题>/phaseN.md` | 实施 phase |
 | `.cadence/research/*.md` | 外部调研笔记 |
@@ -93,7 +93,7 @@ Claude Code 插件由 `.claude-plugin/plugin.json` 声明，并通过 `.claude-p
 | 入口 | 作用 | 主要产物 |
 |---|---|---|
 | `cadence:init` | 初始化项目规则与运行产物忽略项 | `AGENTS.md`、`.gitignore` |
-| `cadence:pai` | 梳理需求边界与验收标准 | `pai-<主题>.md` |
+| `cadence:pai` | 梳理按 REQ/AC 组织的需求规格 | `pai-<主题>.md` |
 | `cadence:pai-with-md` | 复审并修订 pai 文档 | 就地修订 |
 | `cadence:may` | 基于 pai 文档产出技术设计 | `may-<主题>.md` |
 | `cadence:run` | 拆 phase 并逐个实现 | `phaseN.md`、代码 |
@@ -116,7 +116,7 @@ Codex 工作流路由位于 `skills/cadence/SKILL.md`，流程 reference 位于 
 | 命令 | 作用 | 主要产物 |
 |---|---|---|
 | `/cadence:init` | 初始化项目规则与运行产物忽略项 | `CLAUDE.md`、`.gitignore` |
-| `/cadence:pai` | 梳理需求边界与验收标准 | `pai-<主题>.md` |
+| `/cadence:pai` | 梳理按 REQ/AC 组织的需求规格 | `pai-<主题>.md` |
 | `/cadence:pai-with-md` | 复审并修订 pai 文档 | 就地修订 |
 | `/cadence:may` | 基于 pai 文档产出技术设计 | `may-<主题>.md` |
 | `/cadence:run` | 调度 `plan-agent` 与 `code-executor` | `phaseN.md`、代码 |
