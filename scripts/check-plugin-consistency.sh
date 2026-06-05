@@ -314,6 +314,12 @@ for pair in "${codex_agent_assets[@]}"; do
   require_codex_agent_portable "$asset_path"
 done
 
+if grep -q 'pai 需求正文 + `# 设计` 段' "$REPO_ROOT/agents/plan-agent.md" "$REPO_ROOT/assets/codex-agents/plan-agent.toml"; then
+  fail "plan-agent should consume standalone may documents, not legacy pai + design documents"
+else
+  pass "plan-agent consumes standalone may documents"
+fi
+
 if grep -q '__CADENCE_PLUGIN_ROOT__' "$REPO_ROOT/assets/codex-agents/md-to-html.toml"; then
   pass "assets/codex-agents/md-to-html.toml keeps install-time plugin-root placeholder"
 else
