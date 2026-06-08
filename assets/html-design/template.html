@@ -62,10 +62,10 @@
   --pad-bar:    24px 32px;
 
   /* --- layout widths --- */
-  --measure:        720px;  /* 正文阅读宽度 */
-  --toc-w:          260px;
-  --layout-gap:     72px;
-  --layout-max:     calc(var(--measure) + var(--toc-w) + var(--layout-gap));
+  --measure:       1040px;  /* 正文阅读宽度；保留大图细节，同时不把行宽放到全屏 */
+  --toc-w:          300px;
+  --layout-gap:     52px;
+  --layout-max:     calc(var(--measure) + var(--toc-w) + var(--layout-gap) + 80px);
 
   /* --- radius --- */
   --radius-card:    22px;
@@ -453,10 +453,95 @@ pre code { background: none; padding: 0; color: inherit; }
 .pill--no      { background: var(--magenta); color: var(--bone); }
 .pill--note    { background: var(--paper);   color: var(--ink); border: 1.5px solid var(--ink); }
 
+/* === COMPONENT: IMAGE VIEWER (点击看全图) ======================= */
+.image-zoom {
+  position: relative;
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+.image-zoom:focus-visible {
+  outline: 3px solid var(--orange);
+  outline-offset: 4px;
+}
+.image-zoom__label {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 1;
+  padding: 6px 10px;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius-pill);
+  background: rgba(244, 239, 224, 0.94);
+  color: var(--ink);
+  font-family: var(--ff-chrome);
+  font-size: var(--fs-pill);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+.image-zoom:hover .image-zoom__label,
+.image-zoom:focus-visible .image-zoom__label {
+  opacity: 1;
+  transform: translateY(0);
+}
+.image-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  background: rgba(10, 10, 10, 0.86);
+}
+.image-lightbox[hidden] { display: none; }
+.image-lightbox__panel {
+  width: 100%;
+  height: 100%;
+  max-width: calc(100vw - 64px);
+  max-height: calc(100vh - 64px);
+  display: grid;
+  place-items: center;
+}
+.image-lightbox__panel img {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: calc(100vh - 96px);
+  object-fit: contain;
+  border-radius: var(--radius-mark);
+  background: var(--paper);
+}
+.image-lightbox__close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  min-width: 44px;
+  min-height: 44px;
+  border: 1.5px solid var(--bone);
+  border-radius: var(--radius-pill);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--ff-chrome);
+  font-size: var(--fs-chrome);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.has-lightbox { overflow: hidden; }
+
 /* === COMPONENT: FIGURE (A: inline 图 + 标题) ==================== */
 .figure {
   margin: var(--gap-block) 0;
 }
+.figure .image-zoom,
 .figure img {
   width: 100%;
   display: block;
@@ -481,6 +566,7 @@ pre code { background: none; padding: 0; color: inherit; }
   border-radius: var(--radius-card-lg);
   padding: var(--pad-card);
 }
+.figure-tablet .image-zoom,
 .figure-tablet img {
   width: 100%;
   display: block;
@@ -641,6 +727,20 @@ p:lang(zh), li:lang(zh),
   .toc { position: static; }
   .section-divider { margin-left: -20px; margin-right: -20px; padding: 32px 24px; }
   .tablet-row, .stat-row { grid-template-columns: 1fr; }
+  .image-zoom__label {
+    opacity: 1;
+    transform: none;
+  }
+  .image-lightbox { padding: 18px; }
+  .image-lightbox__panel {
+    max-width: calc(100vw - 36px);
+    max-height: calc(100vh - 36px);
+  }
+  .image-lightbox__panel img { max-height: calc(100vh - 72px); }
+  .image-lightbox__close {
+    top: 10px;
+    right: 10px;
+  }
   :root {
     --fs-hero: 64px;
     --fs-h2: 40px;
@@ -789,15 +889,21 @@ p:lang(zh), li:lang(zh),
 
       <h3>A · Inline figure</h3>
       <figure class="figure">
-        <img alt="Sienna placeholder block"
-             src="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 450'&gt;&lt;rect width='800' height='450' fill='%23A06A3C'/&gt;&lt;circle cx='400' cy='225' r='110' fill='%23E2DCC9' opacity='0.25'/&gt;&lt;text x='400' y='240' text-anchor='middle' fill='%23E2DCC9' font-family='Inter,sans-serif' font-size='40' font-weight='700'&gt;800 × 450&lt;/text&gt;&lt;/svg&gt;">
+        <a class="image-zoom" href="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 450'&gt;&lt;rect width='800' height='450' fill='%23A06A3C'/&gt;&lt;circle cx='400' cy='225' r='110' fill='%23E2DCC9' opacity='0.25'/&gt;&lt;text x='400' y='240' text-anchor='middle' fill='%23E2DCC9' font-family='Inter,sans-serif' font-size='40' font-weight='700'&gt;800 × 450&lt;/text&gt;&lt;/svg&gt;" data-full-image aria-label="View full image: Sienna placeholder block">
+          <img alt="Sienna placeholder block"
+               src="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 450'&gt;&lt;rect width='800' height='450' fill='%23A06A3C'/&gt;&lt;circle cx='400' cy='225' r='110' fill='%23E2DCC9' opacity='0.25'/&gt;&lt;text x='400' y='240' text-anchor='middle' fill='%23E2DCC9' font-family='Inter,sans-serif' font-size='40' font-weight='700'&gt;800 × 450&lt;/text&gt;&lt;/svg&gt;">
+          <span class="image-zoom__label">View full image</span>
+        </a>
         <figcaption>Fig. A — inline figure with caption underneath</figcaption>
       </figure>
 
       <h3>C · Figure tablet (paper frame)</h3>
       <figure class="figure-tablet">
-        <img alt="Teal placeholder block"
-             src="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 450'&gt;&lt;rect width='800' height='450' fill='%232D7E73'/&gt;&lt;rect x='280' y='150' width='240' height='150' fill='%23E2DCC9' opacity='0.25'/&gt;&lt;text x='400' y='240' text-anchor='middle' fill='%23E2DCC9' font-family='Inter,sans-serif' font-size='40' font-weight='700'&gt;DIAGRAM&lt;/text&gt;&lt;/svg&gt;">
+        <a class="image-zoom" href="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 450'&gt;&lt;rect width='800' height='450' fill='%232D7E73'/&gt;&lt;rect x='280' y='150' width='240' height='150' fill='%23E2DCC9' opacity='0.25'/&gt;&lt;text x='400' y='240' text-anchor='middle' fill='%23E2DCC9' font-family='Inter,sans-serif' font-size='40' font-weight='700'&gt;DIAGRAM&lt;/text&gt;&lt;/svg&gt;" data-full-image aria-label="View full image: Teal placeholder block">
+          <img alt="Teal placeholder block"
+               src="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 450'&gt;&lt;rect width='800' height='450' fill='%232D7E73'/&gt;&lt;rect x='280' y='150' width='240' height='150' fill='%23E2DCC9' opacity='0.25'/&gt;&lt;text x='400' y='240' text-anchor='middle' fill='%23E2DCC9' font-family='Inter,sans-serif' font-size='40' font-weight='700'&gt;DIAGRAM&lt;/text&gt;&lt;/svg&gt;">
+          <span class="image-zoom__label">View full image</span>
+        </a>
         <figcaption>
           <span class="figure-tablet__label">Fig 01</span>
           <span class="figure-tablet__text">The figure-tablet wraps the image in a paper-fill card, with a Stardos label and Inter body caption side by side. Use this for important visuals you want to anchor.</span>
@@ -926,6 +1032,66 @@ sequenceDiagram
 
   </main>
 </div>
+
+<!-- === IMAGE VIEWER (built-in enhancement, links still work without JS) === -->
+<script>
+  const fullImageLinks = document.querySelectorAll('[data-full-image]');
+
+  if (fullImageLinks.length) {
+    const lightbox = document.createElement('div');
+    lightbox.className = 'image-lightbox';
+    lightbox.hidden = true;
+    lightbox.setAttribute('role', 'dialog');
+    lightbox.setAttribute('aria-modal', 'true');
+    lightbox.setAttribute('aria-label', 'Full image viewer');
+    lightbox.innerHTML = `
+      <button class="image-lightbox__close" type="button" aria-label="Close full image">Close</button>
+      <div class="image-lightbox__panel">
+        <img alt="">
+      </div>
+    `;
+    document.body.appendChild(lightbox);
+
+    const lightboxImage = lightbox.querySelector('img');
+    const closeButton = lightbox.querySelector('.image-lightbox__close');
+    let activeTrigger = null;
+
+    // Contract: open only explicit full-image links marked with data-full-image.
+    function openFullImage(trigger) {
+      const image = trigger.querySelector('img');
+      activeTrigger = trigger;
+      lightboxImage.src = trigger.href;
+      lightboxImage.alt = image ? image.alt : '';
+      lightbox.hidden = false;
+      document.body.classList.add('has-lightbox');
+      closeButton.focus();
+    }
+
+    function closeFullImage() {
+      lightbox.hidden = true;
+      document.body.classList.remove('has-lightbox');
+      lightboxImage.removeAttribute('src');
+      if (activeTrigger) activeTrigger.focus();
+      activeTrigger = null;
+    }
+
+    fullImageLinks.forEach((link) => {
+      link.addEventListener('click', (event) => {
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        event.preventDefault();
+        openFullImage(link);
+      });
+    });
+
+    closeButton.addEventListener('click', closeFullImage);
+    lightbox.addEventListener('click', (event) => {
+      if (event.target === lightbox) closeFullImage();
+    });
+    document.addEventListener('keydown', (event) => {
+      if (!lightbox.hidden && event.key === 'Escape') closeFullImage();
+    });
+  }
+</script>
 
 <!-- === MERMAID (on-demand, ESM from CDN) === -->
 <script type="module">

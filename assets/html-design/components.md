@@ -327,12 +327,15 @@
 ## 13. 图片 figure（A 方案 · inline）
 
 **何时用**：正文里的常规配图、截图、示意图。**默认选这一个**。
-**占位符**：`{{IMG_SRC}}` 图片地址、`{{ALT}}` 替代文字（无障碍必填）、`{{CAPTION}}` 一行小标题。
-**约束**：图片会撑满正文列宽（720px），所以**横图最好 ≥800px 宽**；标题用一行讲清楚，不要写整段。
+**占位符**：`{{IMG_SRC}}` 最终图片地址（本地图片已转成 `data:` URI）、`{{ALT}}` 替代文字（无障碍必填）、`{{CAPTION}}` 一行小标题。
+**约束**：图片会撑满正文列宽；标题用一行讲清楚，不要写整段。`href` 与内层 `img src` 必须使用同一个最终图片地址。`data-full-image` 是模板内置全图查看器的触发点，不能省略。
 
 ```html
 <figure class="figure">
-  <img src="{{IMG_SRC}}" alt="{{ALT}}">
+  <a class="image-zoom" href="{{IMG_SRC}}" data-full-image aria-label="查看全图：{{ALT}}">
+    <img src="{{IMG_SRC}}" alt="{{ALT}}">
+    <span class="image-zoom__label">查看全图</span>
+  </a>
   <figcaption>{{CAPTION}}</figcaption>
 </figure>
 ```
@@ -344,12 +347,15 @@
 ## 14. 图片 figure-tablet（C 方案 · 画框版）
 
 **何时用**：需要强调的关键图（架构图、流程图、产品截图）。**每篇 ≤2 个**，否则失重。比 A 视觉权重重一档。
-**占位符**：`{{IMG_SRC}}` 图片地址、`{{ALT}}` 替代文字、`{{LABEL}}` 短编号标签（如 "Fig 01"、"图 1"）、`{{CAPTION}}` 一两句说明文字。
-**约束**：横图最好 ≥800px 宽；`{{LABEL}}` 控制在 6 字以内，否则会挤压正文。
+**占位符**：`{{IMG_SRC}}` 最终图片地址（本地图片已转成 `data:` URI）、`{{ALT}}` 替代文字、`{{LABEL}}` 短编号标签（如 "Fig 01"、"图 1"）、`{{CAPTION}}` 一两句说明文字。
+**约束**：`href` 与内层 `img src` 必须使用同一个最终图片地址。`data-full-image` 是模板内置全图查看器的触发点，不能省略。`{{LABEL}}` 控制在 6 字以内，否则会挤压正文。
 
 ```html
 <figure class="figure-tablet">
-  <img src="{{IMG_SRC}}" alt="{{ALT}}">
+  <a class="image-zoom" href="{{IMG_SRC}}" data-full-image aria-label="查看全图：{{ALT}}">
+    <img src="{{IMG_SRC}}" alt="{{ALT}}">
+    <span class="image-zoom__label">查看全图</span>
+  </a>
   <figcaption>
     <span class="figure-tablet__label">{{LABEL}}</span>
     <span class="figure-tablet__text">{{CAPTION}}</span>

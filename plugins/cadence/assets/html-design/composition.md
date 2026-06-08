@@ -3,6 +3,7 @@
 > **来源**：本文件是 `components.md`（物料卡）的姊妹文件。物料卡告诉你「有哪些积木」，本文件告诉你「**手里这段内容该挑哪块积木**」。
 > **优先级**：本文件 > `components.md` > `template.html`。三者冲突时以本文件为准。
 > **使用方式**：拿到一篇 markdown / spec / 调研笔记，按 §1 → §2 → §3 → §4 → §5 → §7 顺序决策；§6 兜底；§7 是交付前的自检闸门。
+> **内置交互**：模板自带图片全图查看器和 Mermaid lazy script；输出时保留模板脚本，不自行新增脚本。
 
 ---
 
@@ -153,7 +154,7 @@
 **禁止清单**（违反即重做）：
 - 自创组件 / 自创 class / 写 inline `style="..."`
 - 引入额外的 `<link rel="stylesheet">` 或 `<style>` 块
-- 引入额外 JS（mermaid 已在模板内 lazy load）
+- 引入额外 JS（图片全图查看器和 mermaid lazy load 已在模板内）
 - 嵌套未在 `components.md` 出现过的组合（tablet 套 tablet、figure 套 figure、quote 套 tablet……）
 - 删改 `template.html` 的 `<head>`（字体、mermaid script、元数据）
 
@@ -166,6 +167,7 @@
 ### 7.1 骨架与结构
 - [ ] `<html lang="...">` 正确（整篇中文 `lang="zh"`；中英混排 `lang="en"` 且中文段落加 `lang="zh"`）
 - [ ] `<head>` 完全沿用 `template.html`，未删除字体 / mermaid script / meta
+- [ ] 模板末尾的图片全图查看器脚本与 mermaid lazy script 都已保留
 - [ ] `<div class="page">` → `<nav class="toc">` + `<main class="main">` 完整
 - [ ] cover、toc、≥1 个 section、doc-footer 都存在
 
@@ -179,6 +181,7 @@
 - [ ] 用户内容已 HTML 转义（`&` → `&amp;`、`<` → `&lt;`、`>` → `&gt;`、`"` → `&quot;`）
 - [ ] **例外**：§14b 的 mermaid 源码原样保留，未做转义
 - [ ] `<a href>` 的 URL 合法、未截断
+- [ ] 本地图片引用已转成 `data:<mime>;base64,...`；生成后的 §13 / §14 不残留相对路径、本机绝对路径或 `file://` 图片地址
 
 ### 7.4 预算与节奏（§4）
 - [ ] §6 action-bar ≤ 2
@@ -198,6 +201,7 @@
 - [ ] mermaid 块用 `<pre class="mermaid">`，**未**嵌 `<code>` / 未写成 `<code class="language-mermaid">`
 - [ ] mermaid 单图节点 ≤10、边 ≤12；没有把目录、接口、文件或依赖清单压成一张横向大图
 - [ ] 新生成 mermaid 的节点 ID 是短 ASCII；含 `/`、`:`、`()、{}`、`[]`、逗号、空格、代码片段或中文的展示文本已放进双引号标签
+- [ ] §13 / §14 图片都使用 `a.image-zoom[data-full-image]` 包裹，且 `href` 与内层 `img src` 完全一致
 
 ### 7.6 CJK
 - [ ] 中文段落 / 标题加了 `lang="zh"`
