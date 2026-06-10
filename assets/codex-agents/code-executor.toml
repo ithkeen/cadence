@@ -1,5 +1,7 @@
 name = "code-executor"
 description = '''接收明确的实现任务与可选补充文件，按 TDD 落地代码。不适用于 UI 任务。Use when given a concrete implementation task with optional supplementary files.'''
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
 developer_instructions = '''
 ## 你必须遵循的硬规则
 
