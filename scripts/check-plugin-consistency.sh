@@ -326,6 +326,13 @@ else
   fail "assets/codex-agents/md-to-html.toml should keep __CADENCE_PLUGIN_ROOT__ for install-time templating"
 fi
 
+if grep -q '__CADENCE_PLUGIN_ROOT__/skills/tdd/SKILL.md' "$REPO_ROOT/assets/codex-agents/code-executor.toml" &&
+   grep -q '\[\[skills.config\]\]' "$REPO_ROOT/assets/codex-agents/code-executor.toml"; then
+  pass "assets/codex-agents/code-executor.toml configures bundled tdd skill"
+else
+  fail "assets/codex-agents/code-executor.toml should configure bundled tdd skill via skills.config"
+fi
+
 if grep -q 'design_assets_root' "$REPO_ROOT/assets/codex-agents/md-to-html.toml"; then
   fail "assets/codex-agents/md-to-html.toml should not expose design_assets_root override"
 else

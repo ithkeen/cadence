@@ -25,7 +25,7 @@ for agent in "$SOURCE_DIR"/*.toml; do
   fi
 
   target_agent="$TARGET_DIR/$(basename "$agent")"
-  if [ "$(basename "$agent")" = "md-to-html.toml" ]; then
+  if grep -q "__CADENCE_PLUGIN_ROOT__" "$agent"; then
     sed "s|__CADENCE_PLUGIN_ROOT__|$ESCAPED_PLUGIN_ROOT|g" "$agent" > "$target_agent"
   else
     cp "$agent" "$target_agent"
