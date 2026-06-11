@@ -209,7 +209,7 @@ else
   pass "no per-command Codex skill directories"
 fi
 
-expected_skills="cadence onboarding tdd"
+expected_skills="cadence field-intelligence onboarding tdd"
 actual_skills="$(
   find "$REPO_ROOT/skills" -maxdepth 2 -name SKILL.md -print |
     sed "s#^$REPO_ROOT/skills/##; s#/SKILL.md##" |
