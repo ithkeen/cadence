@@ -96,6 +96,7 @@ Claude Code 插件由 `.claude-plugin/plugin.json` 声明，并通过 `.claude-p
 | `cadence:pai` | 梳理按 REQ/AC 组织的需求规格 | `pai-<主题>.md` |
 | `cadence:pai-with-md` | 复审并修订 pai 文档 | 就地修订 |
 | `cadence:may` | 基于 pai 文档产出技术设计 | `may-<主题>.md` |
+| `cadence:test-case-design` | 基于 pai 文档设计行为测试用例 | `test-cases-<主题>.md` |
 | `cadence:run` | 拆 phase 并逐个实现 | `phaseN.md`、代码 |
 | `cadence:research` | 外部库、API、标准、法规调研 | `.cadence/research/*.md` |
 | `cadence:code-review` | 代码评审 | 中文 review |
@@ -120,6 +121,7 @@ Codex 工作流路由位于 `skills/cadence/SKILL.md`，流程 reference 位于 
 | `/cadence:pai` | 梳理按 REQ/AC 组织的需求规格 | `pai-<主题>.md` |
 | `/cadence:pai-with-md` | 复审并修订 pai 文档 | 就地修订 |
 | `/cadence:may` | 基于 pai 文档产出技术设计 | `may-<主题>.md` |
+| `/cadence:test-case-design` | 基于 pai 文档设计行为测试用例 | `test-cases-<主题>.md` |
 | `/cadence:run` | 调度 `plan-agent` 与 `code-executor` | `phaseN.md`、代码 |
 
 Claude commands 位于 `commands/`，Claude subagents 位于 `agents/`。

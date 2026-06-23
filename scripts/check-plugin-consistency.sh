@@ -253,6 +253,7 @@ fi
 codex_reference_pairs=(
   "pai-with-md|commands/pai-with-md.md|skills/cadence/references/pai-with-md.md"
   "may|commands/may.md|skills/cadence/references/may.md"
+  "test-case-design|commands/test-case-design.md|skills/cadence/references/test-case-design.md"
   "run|commands/run.md|skills/cadence/references/run.md"
 )
 

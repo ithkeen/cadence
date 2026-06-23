@@ -1,6 +1,6 @@
 ---
 name: cadence
-description: "用户输入包含 cadence:init、cadence:pai、cadence:pai-with-md、cadence:may、cadence:run、cadence:research、cadence:code-review、cadence:md-to-html，或中文冒号形式 cadence：<动作> 时使用。"
+description: "用户输入包含 cadence:init、cadence:pai、cadence:pai-with-md、cadence:may、cadence:test-case-design、cadence:run、cadence:research、cadence:code-review、cadence:md-to-html，或中文冒号形式 cadence：<动作> 时使用。"
 ---
 
 # Cadence
@@ -15,6 +15,7 @@ description: "用户输入包含 cadence:init、cadence:pai、cadence:pai-with-m
 - `pai-with-md`：按 `references/pai-with-md.md` 处理。
 - `pai`：按 `references/pai.md` 处理。
 - `may`：按 `references/may.md` 处理。
+- `test-case-design`：按 `references/test-case-design.md` 处理。
 - `run`：按 `references/run.md` 处理。
 - `research`：直接调用 `research-agent` 子 agent。
 - `code-review`：直接调用 `code-reviewer` 子 agent。
