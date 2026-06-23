@@ -109,6 +109,7 @@ Codex 工作流路由位于 `skills/cadence/SKILL.md`，流程 reference 位于 
 | Skill | 作用 |
 |---|---|
 | `cadence` | Cadence 工作流入口 |
+| `commit-message` | 英文 Conventional Commit 信息生成与规范化 |
 | `field-intelligence` | 领域领先信息抓取、清洗、去重、评分并保存为文件 |
 | `tdd` | 红绿重构、接口测试、mock 与重构指导 |
 | `onboarding` | 陌生代码库入门文档生成 |
